@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+
+  --font-mona-sans: var(--font-mona-sans);
+  --font-rubik: var(--font-rubik);
+  --color-blue: var(--blue);
+  --color-blue-deep: var(--blue-deep);
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-lime: var(--lime);
+  --color-devy-navy: var(--devy-navy);
+  --color-devy-lavender: var(--devy-lavender);
+  --color-devy-brown: var(--devy-brown);
+  --color-coral: var(--coral);
+  --color-indigo: var(--indigo);
+  --color-indigo-deep: var(--indigo-deep);
+  --color-royal-blue: var(--royal-blue);
+  --color-sky-blue: var(--sky-blue);
+  --color-teal-deep: var(--teal-deep);
+  --color-red: var(--red);
+}
+
+:root {
+  --font-mona-sans: 'Mona Sans', sans-serif;
+  --font-rubik: 'Rubik', sans-serif;
+  --blue: #2458f5;
+  --blue-deep: #1636b8;
+  --paper: #f6f3e9;
+  --paper-dim: #eae6d6;
+  --ink: #1b1d22;
+  --ink-soft: #5b5e58;
+  --lime: #d9fa3e;
+  --devy-navy: #1f3473;
+  --devy-lavender: #a9a5e2;
+  --devy-brown: #67431e;
+  --coral: #ff6f59;
+  --indigo: #190066;
+  --indigo-deep: #180d43;
+  --royal-blue: #2c56dd;
+  --sky-blue: #1a73e8;
+  --teal-deep: #013330;
+  --red: #ff0000;
+}
+
+* {
+  font-family: 'Mona Sans', sans-serif;
+}
