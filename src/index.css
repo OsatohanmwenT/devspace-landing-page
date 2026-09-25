@@ -1,51 +1,110 @@
-@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=Rubik:ital,wght@0,300..900;1,300..900&family=Caveat:wght@600&family=Familjen+Grotesk:ital,wght@0,400..700;1,400..700&family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
+
 @import "tailwindcss";
 
 @theme {
-
   --font-mona-sans: var(--font-mona-sans);
   --font-rubik: var(--font-rubik);
+  --font-familjen-grotesk: 'Familjen Grotesk', sans-serif;
+  --font-google-sans-flex: 'Google Sans Flex', sans-serif;
+
   --color-blue: var(--blue);
   --color-blue-deep: var(--blue-deep);
+
   --color-paper: var(--paper);
   --color-paper-dim: var(--paper-dim);
+
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
+
   --color-lime: var(--lime);
+
   --color-devy-navy: var(--devy-navy);
   --color-devy-lavender: var(--devy-lavender);
   --color-devy-brown: var(--devy-brown);
+
   --color-coral: var(--coral);
+
   --color-indigo: var(--indigo);
   --color-indigo-deep: var(--indigo-deep);
+
   --color-royal-blue: var(--royal-blue);
   --color-sky-blue: var(--sky-blue);
+
   --color-teal-deep: var(--teal-deep);
+
   --color-red: var(--red);
 }
+
 
 :root {
   --font-mona-sans: 'Mona Sans', sans-serif;
   --font-rubik: 'Rubik', sans-serif;
+
   --blue: #2458f5;
   --blue-deep: #1636b8;
+
   --paper: #f6f3e9;
   --paper-dim: #eae6d6;
+
   --ink: #1b1d22;
   --ink-soft: #5b5e58;
+  --ink-light: #d4d4d4;
+
   --lime: #d9fa3e;
+
   --devy-navy: #1f3473;
   --devy-lavender: #a9a5e2;
   --devy-brown: #67431e;
+
   --coral: #ff6f59;
+
   --indigo: #190066;
   --indigo-deep: #180d43;
+
   --royal-blue: #2c56dd;
   --sky-blue: #1a73e8;
+
   --teal-deep: #013330;
+
   --red: #ff0000;
 }
 
+
 * {
-  font-family: 'Mona Sans', sans-serif;
+  font-family: 'Google Sans Flex', sans-serif;
+}
+
+/* =========================================================
+   LEARNING JOURNEY
+   Driven by --draw / --p (0-1), written from scroll in JS.
+========================================================= */
+
+/* Each stop fades in once the route reaches its --at point */
+.journey-stop {
+  --in: clamp(0, (var(--draw, 1) - var(--at, 0)) * 25, 1);
+  opacity: var(--in);
+  translate: 0 calc((1 - var(--in)) * 14px);
+  rotate: var(--rotate, 0deg);
+  scale: calc(0.96 + var(--in) * 0.04);
+}
+
+/* Question: the block settles in, then words fill in reading order,
+   each overlapping the next, and "better?" gets underlined last. */
+.journey-question {
+  --enter: clamp(0, var(--p, 1) / 0.08, 1);
+  opacity: calc(0.4 + var(--enter) * 0.6);
+  scale: calc(0.96 + var(--enter) * 0.04);
+}
+
+.journey-word {
+  --w: clamp(0, (var(--p, 1) - 0.1 - var(--i, 0) * 0.07) / 0.12, 1);
+  color: color-mix(in srgb, var(--ink) calc(var(--w) * 100%), var(--ink-light));
+  display: inline-block;
+  translate: 0 calc((1 - var(--w)) * 0.06em);
+}
+
+.journey-underline {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: calc(1 - clamp(0, (var(--p, 1) - 0.74) / 0.12, 1));
 }
