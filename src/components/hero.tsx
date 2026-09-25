@@ -1,94 +1,130 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { getMode, prefersReduced } from "./opening-hero/config";
+import { HeroEngine } from "./opening-hero/engine";
+import "./opening-hero/hero.css";
+
+// Devy starts the keystone sequence this long after the loader starts revealing the page.
+const SEQUENCE_DELAY_MS = 400;
+const SCROLL_SMOOTHING = 0.14;
 
 const Hero = ({ ready = true }: { ready?: boolean }) => {
   const heroRef = useRef<HTMLElement | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const copyRef = useRef<HTMLDivElement | null>(null);
+  const engineRef = useRef<HeroEngine | null>(null);
+  const playedRef = useRef(false);
 
+  // Build the skill city; rebuild on breakpoint changes, relayout on other resizes.
   useEffect(() => {
-    const updateScrollProgress = () => {
-      if (!heroRef.current) return;
+    const hero = heroRef.current;
+    const copy = copyRef.current;
+    if (!hero || !copy) return;
 
-      const { height, top } = heroRef.current.getBoundingClientRect();
-      setScrollProgress(Math.min(Math.max(-top / (height * 0.8), 0), 1));
+    let mode = getMode();
+    const engine = new HeroEngine(hero, copy, mode);
+    engineRef.current = engine;
+    if (playedRef.current || prefersReduced()) engine.playSequence({ instant: true });
+    else engine.playSequence().pause(0);
+
+    // Idle (blinks, cursor) only while the hero is on screen and the tab is visible.
+    let onScreen = true;
+    const syncIdle = () => engine.setIdle(onScreen && engine.sequenceDone && document.visibilityState === "visible");
+    const io = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      engine.enabled = onScreen;
+      syncIdle();
+    });
+    io.observe(hero);
+    const idleTimer = window.setInterval(syncIdle, 500);
+    document.addEventListener("visibilitychange", syncIdle);
+
+    let resizeTimer = 0;
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        const next = getMode();
+        if (next === mode) return engine.layout();
+        mode = next;
+        engine.setIdle(false);
+        engine.mode = next;
+        engine.mount();
+        engine.playSequence({ instant: true });
+        syncIdle();
+      }, 150);
     };
-
-    const frame = requestAnimationFrame(updateScrollProgress);
-
-    window.addEventListener("scroll", updateScrollProgress, { passive: true });
-    window.addEventListener("resize", updateScrollProgress);
+    window.addEventListener("resize", onResize);
 
     return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", updateScrollProgress);
-      window.removeEventListener("resize", updateScrollProgress);
+      io.disconnect();
+      window.clearInterval(idleTimer);
+      window.clearTimeout(resizeTimer);
+      document.removeEventListener("visibilitychange", syncIdle);
+      window.removeEventListener("resize", onResize);
+      engine.destroy();
+      engineRef.current = null;
     };
   }, []);
 
+  // Devy installs the keystone once the loader reveals the page.
   useEffect(() => {
-    if (!ready) return;
-    const frame = requestAnimationFrame(() => setIsVisible(true));
-    return () => cancelAnimationFrame(frame);
+    if (!ready || playedRef.current) return;
+    const timer = window.setTimeout(() => {
+      playedRef.current = true;
+      engineRef.current?.seq?.play(0);
+    }, SEQUENCE_DELAY_MS);
+    return () => window.clearTimeout(timer);
   }, [ready]);
 
+  // Scroll exit: smoothed progress written to --hp.
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || prefersReduced()) return;
+
+    let target = 0;
+    let current = 0;
+    let raf = 0;
+    const measure = () => {
+      target = Math.min(Math.max(window.scrollY / hero.offsetHeight, 0), 1);
+    };
+    const tick = () => {
+      current += (target - current) * SCROLL_SMOOTHING;
+      if (Math.abs(target - current) < 0.0005) current = target;
+      hero.style.setProperty("--hp", current.toFixed(4));
+      raf = current === target ? 0 : requestAnimationFrame(tick);
+    };
+    const onScroll = () => {
+      measure();
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    measure();
+    current = target;
+    hero.style.setProperty("--hp", current.toFixed(4));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
   return (
-    <section ref={heroRef} className="relative isolate min-h-[840px] overflow-hidden bg-white px-6 pb-10 pt-32 md:min-h-[900px] md:px-10 md:pt-40">
-      <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center text-center">
-        <div
-          className="flex flex-col items-center"
-          style={{
-            opacity: 1 - scrollProgress * 0.45,
-            transform: `translate3d(0, ${scrollProgress * -64}px, 0) scale(${1 - scrollProgress * 0.08})`,
-            transformOrigin: "center top",
-          }}
-        >
-          <span className={`mb-4 block text-xs font-medium uppercase tracking-[0.22em] text-neutral-500 transition-all duration-500 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
-            Your next chapter starts here
-          </span>
-
-          <h1 className="w-full text-center font-google-sans-flex! text-[10.5vw] font-bold uppercase leading-[0.88] tracking-tight text-neutral-900 md:text-[clamp(5.25rem,8vw,6.5rem)]">
-            <span className={`block transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}>Become</span>
-            <span className={`block transition-all delay-150 duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}>Impossible to</span>
-            <span className={`block transition-all delay-300 duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}>ignore</span>
-          </h1>
-
-          <p className={`mt-5 max-w-xl text-center text-base leading-relaxed text-neutral-600 transition-all delay-500 duration-500 ease-out md:text-lg ${isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
-            Find the skills, direction, and real work to make your next move count.
-          </p>
-
-          <div className={`mt-6 flex flex-wrap justify-center gap-3 transition-all delay-700 duration-500 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
-            <button className="border border-neutral-900 bg-neutral-900 px-6 py-3 text-sm font-semibold text-white">
-              Find my path
-            </button>
-            <button className="border border-neutral-400 bg-white px-6 py-3 text-sm font-semibold text-neutral-700">
-              See how it works
-            </button>
-          </div>
+    <section ref={heroRef} className="opening-hero" aria-labelledby="hero-title">
+      <div ref={copyRef} className="hero-copy">
+        <h1 id="hero-title">
+          <span className="l">Become impossible</span> <span className="l">to ignore.</span>
+        </h1>
+        <p>Learn the right things, build real work, and prove what you can do.</p>
+        <div className="actions">
+          <a className="btn btn-primary cta-start" href="#">
+            Start learning <span className="ar" aria-hidden="true">→</span>
+          </a>
+          <a className="btn btn-secondary cta-how" href="#how-it-works">
+            See how it works <span className="ar" aria-hidden="true">↓</span>
+          </a>
         </div>
       </div>
-
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-[46%] overflow-hidden border-t border-neutral-200"
-        style={{
-          transform: `translate3d(0, ${scrollProgress * -28}px, 0) scale(${1 + scrollProgress * 0.06})`,
-          transformOrigin: "bottom center",
-        }}
-      >
-        <div className={`absolute -left-10 bottom-0 h-[72%] w-[48%] rounded-tr-[100%] border border-neutral-300 bg-neutral-100 transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`} />
-        <div className={`absolute left-[22%] bottom-0 h-[56%] w-[54%] rounded-t-[100%] border border-neutral-300 bg-neutral-50 transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}`} />
-        <div className={`absolute -right-12 bottom-0 h-[78%] w-[46%] rounded-tl-[100%] border border-neutral-300 bg-neutral-100 transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0"}`} />
-        <div className={`absolute left-[12%] top-[20%] h-10 w-24 rounded-full border border-neutral-300 bg-white transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`} />
-        <div className={`absolute right-[13%] top-[28%] h-8 w-20 rounded-full border border-neutral-300 bg-white transition-all duration-700 ease-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"}`} />
-        <div
-          className={`absolute bottom-10 left-[18%] h-20 w-12 rounded-t-full border border-neutral-400 bg-white transition-[opacity,transform] duration-700 ease-out ${isVisible ? "opacity-100" : "opacity-0"}`}
-          style={{ transform: `translateY(${isVisible ? scrollProgress * -26 : 20}px)` }}
-        />
-        <div
-          className={`absolute bottom-8 right-[23%] h-28 w-16 rounded-t-full border border-neutral-400 bg-white transition-[opacity,transform] duration-700 ease-out ${isVisible ? "opacity-100" : "opacity-0"}`}
-          style={{ transform: `translateY(${isVisible ? scrollProgress * -46 : 28}px)` }}
-        />
-      </div>
+      <p className="sr-only">
+        Illustration: Devy the hamster sets the keystone into a foundation, and a city of skills (design, development, data, product and marketing) comes to life.
+      </p>
     </section>
   );
 };

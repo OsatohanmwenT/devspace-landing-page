@@ -1,0 +1,106 @@
+/* Hero styles from the devspace-opening prototype, scoped to .opening-hero. */
+
+/* PP Neue Montreal: PROTOTYPE ONLY (Pangram Pangram free-trial terms, design/testing).
+   Needs a web licence before the public site ships. */
+@font-face { font-family: "PP Neue Montreal"; src: url("/fonts/PPNeueMontreal-Book.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "PP Neue Montreal"; src: url("/fonts/PPNeueMontreal-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+/* Inter (SIL OFL), self-hosted variable font, latin subset */
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-Variable.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+.opening-hero {
+  --night: #0b0d11;
+  --paper: #f4f2ed;
+  --paper-2: #ece9e2;
+  --paper-3: #e0dcd3;
+  --line: #d6d2c8;
+  --blueprint: #9fb4d4;
+  --ink: #0e1116;
+  --ink-2: #262a31;
+  --graphite: #545b66;
+  --signal: #243add;
+  --ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+  --display: "PP Neue Montreal", "Inter", system-ui, sans-serif;
+  --ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  position: relative;
+  height: 100vh;
+  height: 100svh;
+  min-height: 640px;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+.opening-hero * { font-family: inherit; }
+
+.opening-hero :focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 4px; }
+
+/* city */
+.opening-hero .city-wrap { position: absolute; inset: 0; will-change: transform; }
+.opening-hero .city { position: absolute; left: 0; bottom: 0; display: block; overflow: visible; transform-origin: 0 0; will-change: transform; }
+
+/* copy */
+.opening-hero .hero-copy { position: absolute; left: 0; right: 0; top: var(--h-top, 176px); display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px; z-index: 2; }
+.opening-hero .hero-copy h1 { margin: 0; font: 500 88px/0.95 var(--display); letter-spacing: -0.03em; color: var(--ink); }
+.opening-hero .hero-copy h1 .l { display: block; white-space: nowrap; }
+.opening-hero .hero-copy p { margin: 28px 0 0; max-width: 500px; font: 400 19px/28px var(--ui); color: var(--graphite); }
+.opening-hero .hero-copy .actions { margin-top: 36px; display: flex; gap: 12px; }
+
+/* buttons */
+.opening-hero .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 52px; padding: 0 24px; border-radius: 8px; text-decoration: none; font: 500 16px/1 var(--ui); cursor: pointer; white-space: nowrap; }
+.opening-hero .btn .ar { display: inline-block; transition: transform 0.16s var(--ease-arrive); }
+.opening-hero .btn-primary { background: var(--ink); color: var(--paper); border: 0; transition: background 0.16s; }
+.opening-hero .btn-primary:hover { background: var(--ink-2); }
+.opening-hero .btn-primary:hover .ar { transform: translateX(3px); }
+.opening-hero .btn-secondary { padding: 0 20px; background: none; color: var(--ink); border: 1px solid rgb(14 17 22 / 0.2); transition: border-color 0.16s; }
+.opening-hero .btn-secondary:hover { border-color: rgb(14 17 22 / 0.6); }
+.opening-hero .btn-secondary:hover .ar { transform: translateY(3px); }
+
+/* skill city */
+.opening-hero .city .f { fill: var(--paper-2); stroke: rgb(14 17 22 / 0.8); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.opening-hero .city .s { fill: var(--paper-3); stroke: rgb(14 17 22 / 0.8); stroke-width: 1.25; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.opening-hero .city .t { fill: var(--paper); stroke: rgb(14 17 22 / 0.8); stroke-width: 1.25; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.opening-hero .city .d * { fill: none; stroke: rgb(14 17 22 / 0.35); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.opening-hero .city .d circle[r="1"] { fill: rgb(14 17 22 / 0.35); stroke: none; }
+.opening-hero .city .d .code { stroke: rgb(14 17 22 / 0.55); stroke-linecap: round; stroke-width: 1.5; }
+.opening-hero .city .d .dash { stroke-dasharray: 3 3; }
+.opening-hero .city .d .node { fill: var(--paper); stroke: rgb(14 17 22 / 0.8); stroke-width: 1; }
+.opening-hero .city .hint { fill: none; stroke: var(--blueprint); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+.opening-hero .city .grid { stroke: var(--blueprint); stroke-width: 1; opacity: 0.16; vector-effect: non-scaling-stroke; }
+.opening-hero .city .bgb { fill: none; stroke: rgb(14 17 22 / 0.07); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.opening-hero .city .joint { stroke: rgb(14 17 22 / 0.8); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.opening-hero .city .keyjoint { stroke: rgb(14 17 22 / 0.8); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.opening-hero .city .crate rect { fill: var(--paper-2); stroke: rgb(14 17 22 / 0.8); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.opening-hero .city .crate line { stroke: rgb(14 17 22 / 0.35); vector-effect: non-scaling-stroke; }
+.opening-hero .city .beam { filter: blur(1.5px); }
+.opening-hero .city .beam rect { fill: var(--paper-3); stroke: rgb(14 17 22 / 0.6); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.opening-hero .city .beam line { stroke: rgb(14 17 22 / 0.35); vector-effect: non-scaling-stroke; }
+.opening-hero .city .act { opacity: 0; }
+.opening-hero .city .act-data { fill: var(--paper-2); stroke: rgb(14 17 22 / 0.8); stroke-width: 1.25; vector-effect: non-scaling-stroke; }
+.opening-hero .city .act-product { fill: var(--ink); }
+.opening-hero .city .act-marketing { fill: none; stroke: rgb(14 17 22 / 0.5); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.opening-hero .city .cursor { fill: var(--ink); opacity: 0; }
+.opening-hero .city .cursor.on { opacity: 1; }
+.opening-hero .city .cursor.blink { animation: opening-hero-blink 1.06s steps(1, end) infinite; }
+@keyframes opening-hero-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+.opening-hero .city .sig { fill: none; stroke: var(--signal); stroke-linecap: round; stroke-dasharray: 0 1; opacity: 0; }
+.opening-hero .city .flash .f, .opening-hero .city .flash .t { stroke: var(--ink); }
+
+/* Scroll exit (--hp: 0 → 1 as the hero leaves): copy lifts and fades, the city sinks slower than the page */
+.opening-hero .hero-copy { translate: 0 calc(var(--hp, 0) * -96px); opacity: calc(1 - var(--hp, 0) * 1.4); }
+.opening-hero .city-wrap { translate: 0 calc(var(--hp, 0) * 34vh); }
+
+/* responsive */
+@media (max-width: 1199px) {
+  .opening-hero .hero-copy h1 { font-size: 72px; line-height: 0.96; }
+  .opening-hero .hero-copy p { font-size: 18px; line-height: 27px; }
+}
+@media (max-width: 767px) {
+  .opening-hero .hero-copy { padding: 0 20px; }
+  .opening-hero .hero-copy h1 { font-size: clamp(34px, 10.4vw, 44px); line-height: 1; }
+  .opening-hero .hero-copy p { font-size: 17px; line-height: 26px; margin-top: 20px; }
+  .opening-hero .hero-copy .actions { flex-direction: column; width: 100%; gap: 10px; margin-top: 28px; }
+  .opening-hero .btn { width: 100%; }
+}
