@@ -9,6 +9,14 @@ import { devySvg, rig, type DevyRig, DEVY_VIEWBOX, DEVY_FEET_Y, DEVY_CENTER_X } 
 /** Progress at which the path has (almost) reached its end and the question appears. */
 const END_MARK_AT = 0.985;
 
+// Devy's arc through the path
+/** Brows sink this far (design px) at each checkpoint reached, down to BROW_SINK_MAX. */
+const BROW_SINK_PER_CP = 0.7;
+const BROW_SINK_MAX = 4.2;
+/** A card landing within this distance (scene units) of Devy makes him flinch. */
+const FLINCH_RADIUS = 340;
+const FLINCH_COOLDOWN_MS = 350;
+
 type CardRt = {
   key: CardKey; el: HTMLElement; trigger: number; cpP: number; named: boolean;
   state: 'hidden' | 'dormant' | 'arrived'; aged: boolean;
@@ -40,6 +48,10 @@ export class Scene {
   private reacted = false;
   private loopReacted = false;
   private eye = { x: 0, y: 0 };
+  private devyPt = { x: 0, y: 0 };
+  private browTarget = { l: NaN, r: NaN };
+  private lastFlinch = 0;
+  private facingEnd = false;
 
   constructor(root: HTMLDivElement, mode: Mode) {
     this.root = root;
@@ -236,6 +248,7 @@ export class Scene {
       let st: CardRt['state'] = p >= c.trigger ? 'arrived' : c.named ? 'dormant' : 'hidden';
       if (p <= 0.0001 && !this.dormantVisible && c.named) st = 'hidden';
       if (st !== c.state || force) {
+        if (st === 'arrived' && !force && p > prev) this.maybeFlinch(c.el);
         c.state = st;
         c.el.classList.toggle('dormant', st === 'dormant');
         c.el.classList.toggle('arrived', st === 'arrived');
@@ -276,7 +289,6 @@ export class Scene {
       const tl = gsap.timeline();
       tl.to(this.devy.pupils, { x: 22, y: 8, duration: 0.3, ease: EASE.arrive })
         .to(this.devy.pupils, { x: -22, y: -10, duration: 0.35, ease: EASE.arrive }, 0.45)
-        .to(this.devy.browR, { y: -3 * k, duration: 0.25, ease: EASE.arrive }, 0.8)
         .to(this.devy.pupils, { x: 0, y: 4, duration: 0.3 }, 1.1);
       if (!this.seriouslyShown && this.captionEnabled) {
         this.seriouslyShown = true;
@@ -286,7 +298,6 @@ export class Scene {
       }
     } else if (!react && this.reacted && p < stoppedAt) {
       this.reacted = false;
-      gsap.to(this.devy.browR, { y: 0, duration: 0.25 });
     }
     // after the stop, eyes track the pen with ~300ms lag
     if (p >= stoppedAt) {
@@ -301,14 +312,70 @@ export class Scene {
     const loopHit = p >= this.pLoopNear;
     if (loopHit && !this.loopReacted) {
       this.loopReacted = true;
-      gsap.timeline()
-        .to([this.devy.browL, this.devy.browR], { y: 1 * k, duration: 0.3, ease: EASE.arrive })
-        .add(this.slowBlink(), 0.4);
+      gsap.timeline().add(this.slowBlink(), 0.4);
     } else if (!loopHit && this.loopReacted && p < this.pLoopNear - 0.02) {
       this.loopReacted = false;
-      gsap.to([this.devy.browL], { y: 0, duration: 0.25 });
     }
+    this.devyPt = pt;
+    this.renderMood(p, k);
+    this.renderFacingEnd(p, pt, k);
     void prev;
+  }
+
+  /**
+   * Brows are a function of p: they sink a little further at every checkpoint the path reaches.
+   * The surprised right brow (from START until the loop) sits on top; "What's next?" lifts both.
+   */
+  private renderMood(p: number, k: number) {
+    const reached = this.cpEls.filter((c) => p >= c.p).length;
+    const hopeful = p >= END_MARK_AT;
+    const sink = hopeful ? -2 : Math.min(reached * BROW_SINK_PER_CP, BROW_SINK_MAX);
+    const surprise = this.reacted && !this.loopReacted && !hopeful ? -3 : 0;
+    const l = sink * k;
+    const r = (sink + surprise) * k;
+    if (l === this.browTarget.l && r === this.browTarget.r) return;
+    this.browTarget = { l, r };
+    gsap.to(this.devy.browL, { y: l, duration: 0.35, ease: EASE.arrive, overwrite: 'auto' });
+    gsap.to(this.devy.browR, { y: r, duration: 0.35, ease: EASE.arrive, overwrite: 'auto' });
+  }
+
+  /** A card lands near him: lean away, glance at it, settle. */
+  private maybeFlinch(card: HTMLElement) {
+    const now = performance.now();
+    if (now - this.lastFlinch < FLINCH_COOLDOWN_MS) return;
+    const cx = card.offsetLeft + card.offsetWidth / 2;
+    const cy = card.offsetTop + card.offsetHeight / 2;
+    const dx = cx - this.devyPt.x;
+    if (Math.hypot(dx, cy - this.devyPt.y) > FLINCH_RADIUS) return;
+    this.lastFlinch = now;
+    const side = dx > 0 ? 1 : -1;
+    gsap.timeline()
+      .to(this.devy.lean, { rotation: -7 * side, svgOrigin: '512 842', duration: 0.1, ease: 'power2.out', overwrite: 'auto' }, 0)
+      .to(this.devy.pupils, { x: 22 * side, y: -8, duration: 0.12, ease: EASE.arrive, overwrite: 'auto' }, 0)
+      .to(this.devy.lean, { rotation: this.facingEnd ? this.endLean() : 0, svgOrigin: '512 842', duration: 0.45, ease: EASE.arrive }, 0.2);
+  }
+
+  /** Lean (deg) towards the "What's next?" marker. */
+  private endLean() {
+    const end = this.geo.points[this.geo.points.length - 1];
+    return end[0] > this.devyPt.x ? 5 : -5;
+  }
+
+  /** When "What's next?" appears he turns to it (small hop, leans in) and holds; scrolling back undoes it. */
+  private renderFacingEnd(p: number, pt: { x: number; y: number }, k: number) {
+    const facing = p >= END_MARK_AT;
+    if (facing === this.facingEnd) return;
+    this.facingEnd = facing;
+    if (facing) {
+      const end = this.geo.points[this.geo.points.length - 1];
+      gsap.timeline()
+        .to(this.devy.upper, { y: -3 * k, duration: 0.14, ease: 'power1.out' }, 0.15)
+        .to(this.devy.upper, { y: 0, duration: 0.16, ease: 'power1.in' }, 0.29)
+        .to(this.devy.lean, { rotation: this.endLean(), svgOrigin: '512 842', duration: 0.5, ease: EASE.move, overwrite: 'auto' }, 0.1)
+        .to(this.devy.pupils, { x: clamp((end[0] - pt.x) / 200, -1, 1) * 24, y: -6, duration: 0.4, ease: EASE.arrive, overwrite: 'auto' }, 0.1);
+    } else {
+      gsap.to(this.devy.lean, { rotation: 0, svgOrigin: '512 842', duration: 0.35, ease: EASE.arrive, overwrite: 'auto' });
+    }
   }
   captionEnabled = true;
   private slowBlink() {

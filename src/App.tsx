@@ -15,6 +15,7 @@ import PageLoader from "./components/page-loader";
 import Paths from "./components/paths";
 import Pricing from "./components/pricing";
 import ProductTour from "./components/product-tour";
+import StraightPath from "./components/straight-path";
 import Testimonials from "./components/testimonials";
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
         <Header />
         <Opening ready={revealed} />
         <Question className="bg-[#f4f2ed]" />
+        <StraightPath />
         <ProductTour />
         <Marquee />
         <Metrics />
