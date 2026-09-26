@@ -324,7 +324,7 @@ const StraightPath = () => {
   return (
     <section
       ref={sectionRef}
-      className="straight-path relative bg-[#f4f2ed] md:h-[300vh]"
+      className="straight-path relative bg-[#f4f2ed] md:h-[360vh]"
       aria-labelledby="straight-path-title"
       style={{ "--fill": 0, "--morph": 0 } as CSSProperties}
     >
@@ -335,7 +335,7 @@ const StraightPath = () => {
           <path ref={morphRef} className="path-morph-line" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
 
-        <header className="relative mx-auto w-full max-w-7xl px-6 pt-24 md:px-10 md:pt-28">
+        <header className="path-intro relative mx-auto w-full max-w-7xl px-6 pt-24 md:px-10 md:pt-[15vh]">
           <h2 id="straight-path-title" className="font-google-sans-flex text-[clamp(2.25rem,4vw,3.75rem)] font-bold leading-[1.02] tracking-tight text-neutral-900">
             {HEADLINE}
           </h2>
@@ -347,7 +347,7 @@ const StraightPath = () => {
         </header>
 
         {/* Desktop: the straight line, cards on top, labels below, Devy at the end */}
-        <div className="relative mx-auto mt-auto hidden w-full max-w-7xl px-10 pb-[12vh] md:block">
+        <div className="relative mx-auto mt-auto hidden w-full max-w-7xl px-10 pb-[16vh] md:block">
           <div ref={rowRef} className="relative grid grid-cols-6 gap-6">
             {STAGES.map((stage, i) => (
               <Stage key={stage.name} i={i} />

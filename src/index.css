@@ -132,6 +132,15 @@
   opacity: calc(0.3 * clamp(0, (1 - var(--morph, 1)) / 0.08, 1));
 }
 
+/* The answer to the question arrives with the path pulling itself into order. */
+@media (min-width: 768px) {
+  .straight-path .path-intro {
+    --intro: clamp(0, var(--morph, 1) * 2.2, 1);
+    opacity: var(--intro);
+    translate: 0 calc((1 - var(--intro)) * 28px);
+  }
+}
+
 /* ── beat 2: the line (in from outside the screen on the left, ending under Devy near the right edge) */
 .straight-path .path-line {
   top: var(--line-y);
