@@ -11,6 +11,7 @@
 import gsap from "gsap";
 import { budget, clamp, getMode, isShortLandscape, prefersReduced, type Mode } from "./config";
 import { HeroEngine } from "./engine";
+import { SCROLL_SMOOTHING_MS } from "../../lib/smooth-scroll";
 import { Scene } from "./scene";
 import { Narrative } from "./narrative";
 import { createT1, createT2, releaseCards, type StageDom } from "./transitions";
@@ -27,8 +28,13 @@ export type OpeningDom = StageDom & {
 
 // Devy starts the keystone sequence this long after the page is revealed.
 const SEQUENCE_DELAY = 0.4;
-// Scroll smoothing time constant (ms): enough to glide, short enough to stay under the finger.
-const SMOOTHING_MS = 90;
+// Scroll smoothing time constant (ms), shared with the sections after the opening.
+const SMOOTHING_MS = SCROLL_SMOOTHING_MS;
+// Before the city comes apart, the hero still answers the scroll: copy and city lift slightly (px at t1Start).
+const PRELUDE_COPY_LIFT = 28;
+const PRELUDE_CITY_LIFT = 18;
+/** CSS var (on <html>) with the length of the stage's scroll-out, so the next section can overlap it. */
+const TAIL_VAR = "--opening-tail";
 // Jumps bigger than this (anchor links) snap instead of animating through every stage.
 const SNAP_VH = 150;
 const IDLE_TIMEOUT = 5 * 60 * 1000;
@@ -87,6 +93,15 @@ export class Opening {
     this.vh = window.innerHeight;
     // the stage stays pinned until t2End, then scrolls away with the page
     this.dom.root.style.height = this.isStatic ? "" : ((budget(this.mode).t2End + 100) * this.vh) / 100 + "px";
+    // that last screen of scroll-out is plain paper: the next section overlaps it (see .question-handoff)
+    if (this.isStatic) document.documentElement.style.removeProperty(TAIL_VAR);
+    else document.documentElement.style.setProperty(TAIL_VAR, this.vh + "px");
+  }
+
+  /** Scroll-linked lift while the hero holds (u: 0 → 1 over 0 → t1Start); T1 continues from its end. */
+  private prelude(u: number) {
+    gsap.set(this.dom.copy, { y: -PRELUDE_COPY_LIFT * u });
+    gsap.set(this.hero.wrap, { y: -PRELUDE_CITY_LIFT * u });
   }
 
   /** Scroll position in vh, relative to the top of the opening. */
@@ -181,6 +196,7 @@ export class Opening {
 
     // ── T1 (hero → cards). Built lazily from the live geometry, with the hero at rest.
     if (u1 > 0 && !this.t1) {
+      this.prelude(1); // T1 records its start from here, so it picks up exactly where the lift ended
       this.startCall?.kill();
       this.hero.finishNow();
       this.hero.setIdle(false);
@@ -198,6 +214,7 @@ export class Opening {
         this.cardsReleased = true;
       }
     }
+    if (u1 <= 0) this.prelude(clamp(y / B.t1Start));
 
     // ── T2 (pull back, drain). Built the first time the path is complete.
     if (u2 > 0 && !this.t2) {
@@ -327,5 +344,6 @@ export class Opening {
     this.dom.narr.innerHTML = "";
     this.dom.root.classList.remove("static");
     this.dom.root.style.height = "";
+    document.documentElement.style.removeProperty(TAIL_VAR);
   }
 }

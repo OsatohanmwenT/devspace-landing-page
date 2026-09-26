@@ -110,6 +110,21 @@
 }
 
 /* =========================================================
+   OPENING → QUESTION HANDOFF
+   The opening's last screen scrolls away as plain paper. Question overlaps it
+   (--opening-tail, set by opening.ts): its words rise in over the draining
+   tangle and pin as the veil completes. The overlapping band is transparent so
+   the stage shows through; below it, the same paper.
+========================================================= */
+
+.question-handoff {
+  position: relative;
+  z-index: 10;
+  margin-top: calc(-1 * var(--opening-tail, 0px));
+  background: linear-gradient(to bottom, transparent var(--opening-tail, 0px), #f4f2ed var(--opening-tail, 0px));
+}
+
+/* =========================================================
    STRAIGHT PATH (straight-path.tsx)
    Driven from scroll in JS:
      --morph (0-1)  the opening's tangle pulls taut into the line
@@ -291,6 +306,18 @@
   height: auto;
 }
 
+/* The product statement enters once it reaches the viewport, without creating a new pinned scene. */
+.tour-intro {
+  opacity: 0;
+  translate: 0 28px;
+}
+.tour-intro.is-visible {
+  animation: product-tour-intro 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes product-tour-intro {
+  to { opacity: 1; translate: 0 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .straight-path .path-card,
   .straight-path .path-stage-card::after,
@@ -301,4 +328,6 @@
   .straight-path .fix-check {
     transition: none;
   }
+  .tour-intro { opacity: 1; translate: 0 0; }
+  .tour-intro.is-visible { animation: none; }
 }

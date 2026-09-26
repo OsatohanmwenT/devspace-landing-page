@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { devySvg } from "./opening/devy";
 import { sceneGeo, smoothPath } from "./opening/geometry";
+import { smoothFollow } from "../lib/smooth-scroll";
 
 /* =========================================================
    "Your learning should lead somewhere."
@@ -27,6 +28,7 @@ const LINES = [
 const MORPH_END = 0.26; // the tangle is straight by here
 const FILL_START = 0.28;
 const FILL_END = 0.86;
+const BOTTOM_SPACE_VH = 20;
 // Points sampled along the tangle for the morph.
 const MORPH_POINTS = 160;
 
@@ -272,18 +274,17 @@ const useStraightPath = (
       path.setAttribute("d", d);
     };
 
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      let morph = 1;
-      let fill = 1;
-      if (!reduced) {
-        const { top, height } = section.getBoundingClientRect();
-        const scrollable = height - window.innerHeight;
-        const p = scrollable > 0 ? clamp(-top / scrollable) : 1;
-        morph = clamp(p / MORPH_END);
-        fill = clamp((p - FILL_START) / (FILL_END - FILL_START));
-      }
+    /** Raw scroll progress through the pinned stretch (0 → 1). */
+    const target = () => {
+      if (reduced) return 1;
+      const { top, height } = section.getBoundingClientRect();
+      const scrollable = height - window.innerHeight;
+      const bottomSpace = window.innerWidth >= 768 ? (window.innerHeight * BOTTOM_SPACE_VH) / 100 : 0;
+      return scrollable > 0 ? clamp(-top / Math.max(1, scrollable - bottomSpace)) : 1;
+    };
+    const render = (p: number) => {
+      const morph = clamp(p / MORPH_END);
+      const fill = clamp((p - FILL_START) / (FILL_END - FILL_START));
       section.style.setProperty("--morph", morph.toFixed(4));
       section.style.setProperty("--fill", fill.toFixed(4));
       drawMorph(morph);
@@ -292,21 +293,21 @@ const useStraightPath = (
         el.classList.toggle("landed", fill > 0 && fill >= parseFloat(el.style.getPropertyValue("--at")));
       });
     };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
+    // eased like the opening, so the whole flow scrolls with one feel
+    const follow = smoothFollow(target, render);
+    const schedule = () => follow.kick();
     const onResize = () => {
       measure();
       schedule();
     };
 
     measure();
-    update();
+    follow.snap();
     document.fonts.ready.then(onResize);
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", onResize);
     return () => {
-      cancelAnimationFrame(raf);
+      follow.cancel();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", onResize);
     };
@@ -324,7 +325,7 @@ const StraightPath = () => {
   return (
     <section
       ref={sectionRef}
-      className="straight-path relative bg-[#f4f2ed] md:h-[360vh]"
+      className="straight-path relative bg-[#f4f2ed] md:box-content md:h-[360vh] md:pb-[20vh]"
       aria-labelledby="straight-path-title"
       style={{ "--fill": 0, "--morph": 0 } as CSSProperties}
     >

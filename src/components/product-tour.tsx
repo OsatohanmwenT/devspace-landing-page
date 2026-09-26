@@ -100,13 +100,26 @@ const useActiveStep = (refs: React.RefObject<(HTMLElement | null)[]>) => {
 
 const ProductTour = () => {
   const shotRefs = useRef<(HTMLElement | null)[]>([]);
+  const introRef = useRef<HTMLElement | null>(null);
   const active = useActiveStep(shotRefs);
+  const [introVisible, setIntroVisible] = useState(false);
+
+  useEffect(() => {
+    const intro = introRef.current;
+    if (!intro) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setIntroVisible(true);
+      observer.disconnect();
+    }, { threshold: 0.35 });
+    observer.observe(intro);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className="border-b border-neutral-300 bg-white px-6 md:px-10" aria-labelledby="product-tour-title">
       <div className="mx-auto max-w-7xl">
-        {/* Intro */}
-        <header className="max-w-2xl pb-16 pt-32 md:pb-8">
+        <header ref={introRef} className={`tour-intro max-w-2xl pb-16 pt-24 md:pb-8 md:pt-[18vh] ${introVisible ? "is-visible" : ""}`}>
           <span className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-400">{INTRO.kicker}</span>
           <h2 id="product-tour-title" className="mt-4 font-google-sans-flex text-[clamp(2.25rem,4vw,3.5rem)] font-bold leading-[1.02] tracking-tight text-neutral-900">
             {INTRO.title}
@@ -147,7 +160,7 @@ const ProductTour = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-[20vh] py-[25vh]">
+          <div className="flex flex-col gap-[20vh] py-[14vh]">
             {STEPS.map((step, i) => (
               <figure
                 key={step.kicker}

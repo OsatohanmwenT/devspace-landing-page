@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { smoothFollow } from "../lib/smooth-scroll";
 import Reveal from "./reveal";
 
 /* =========================================================
@@ -180,7 +181,7 @@ const DRAW_END = 0.78;
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
 /* =========================================================
-   Scroll progress: writes --p onto the element every frame
+   Scroll progress (eased): writes --p onto the element every frame
    and calls onProgress so JS-only bits can follow along.
 ========================================================= */
 
@@ -202,22 +203,20 @@ const useScrollProgress = (ref: RefObject<HTMLElement | null>, onProgress?: (p: 
       return;
     }
 
-    let raf = 0;
-    const update = () => {
-      raf = 0;
+    const target = () => {
       const { top, height } = el.getBoundingClientRect();
       const scrollable = height - window.innerHeight;
-      apply(scrollable > 0 ? clamp(-top / scrollable) : 1);
+      return scrollable > 0 ? clamp(-top / scrollable) : 1;
     };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
+    // eased like the opening, so the whole flow scrolls with one feel
+    const follow = smoothFollow(target, apply);
+    const schedule = () => follow.kick();
 
-    update();
+    follow.snap();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     return () => {
-      cancelAnimationFrame(raf);
+      follow.cancel();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
     };

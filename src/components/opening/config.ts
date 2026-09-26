@@ -24,14 +24,14 @@ export function getMode(w = window.innerWidth): Mode {
 export function budget(mode: Mode) {
   const mobile = mode === "mobile";
   return {
-    // Give the settled city time to be read before it begins to come apart.
-    t1Start: 120,
-    // Copy departure and the city deconstruction need distinct room to land.
-    t1End: mobile ? 250 : 260,
+    // A short beat on the settled city (the copy and city lift with the scroll), then it comes apart.
+    t1Start: 30,
+    // Copy departure and the city deconstruction.
+    t1End: mobile ? 125 : 130,
     // The learner path is the longest beat: each checkpoint needs time to register.
-    fragEnd: mobile ? 530 : 610,
+    fragEnd: mobile ? 405 : 480,
     // Leave a full final beat for the path to settle into the paper handoff.
-    t2End: mobile ? 630 : 750,
+    t2End: mobile ? 505 : 620,
   };
 }
 
