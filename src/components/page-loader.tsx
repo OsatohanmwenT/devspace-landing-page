@@ -14,6 +14,7 @@ const LOAD = 1800;
 const REVEAL_AT = 900;
 const REVEAL_FOR = 900;
 const END = REVEAL_AT + REVEAL_FOR;
+const CONTENT_VISIBLE_AT = 700; // matches the old `k < 700` cutoff
 
 const NIGHT = "#0B0D11";
 const PAPER = "#F4F2ED";
@@ -43,6 +44,11 @@ const PageLoader = ({
   const onRevealRef = useRef(onReveal);
   onRevealRef.current = onReveal;
 
+  // If this fires more than twice (StrictMode legitimately double-invokes once
+  // in dev), `contentRef` almost certainly doesn't have a stable identity and
+  // the whole timeline is restarting from 0 on every parent re-render.
+  const mountCountRef = useRef(0);
+
   // Layout effect, so the mark is centred before the first paint rather than on the first animation frame.
   useLayoutEffect(() => {
     const world = worldRef.current;
@@ -52,6 +58,18 @@ const PageLoader = ({
     const pct = pctRef.current;
     const stage = stageRef.current;
     if (!world || !trace || !fill || !plug || !pct || !stage) return;
+
+    if (process.env.NODE_ENV !== "production") {
+      mountCountRef.current += 1;
+      if (mountCountRef.current > 2) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[PageLoader] effect has re-run %d times — check that `contentRef` " +
+            "passed in is a stable useRef() and not recreated on every render.",
+          mountCountRef.current
+        );
+      }
+    }
 
     const content = contentRef.current;
     const html = document.documentElement;
@@ -80,11 +98,25 @@ const PageLoader = ({
       pct.style.top = `${cy + (H * s0) / 2 + 40}px`;
     };
 
+    // `visibility: hidden` alone still fully lays out and paints the subtree
+    // every frame. If `content` is a real page (not a couple lines of text),
+    // that's genuine work competing with this rAF loop for the same frame
+    // budget — the most common reason this feels janky next to a bare HTML
+    // preview with almost nothing behind it. `content-visibility: hidden`
+    // skips layout/paint/hit-testing for the children entirely while the box
+    // itself keeps its dimensions, so nothing shifts when we flip it back.
+    const setContentHidden = (hidden: boolean) => {
+      if (!content) return;
+      content.style.visibility = hidden ? "hidden" : "visible";
+      (content.style as any).contentVisibility = hidden ? "hidden" : "visible";
+    };
+
     const finish = () => {
       if (content) {
         content.style.filter = "";
         content.style.transform = "";
         content.style.visibility = "";
+        (content.style as any).contentVisibility = "";
       }
       html.style.overflow = prevOverflow;
       reveal();
@@ -111,11 +143,13 @@ const PageLoader = ({
       };
     }
 
-    if (content) content.style.visibility = "hidden";
+    setContentHidden(true);
     layout(1);
 
     let start: number | null = null;
     let raf = 0;
+    let contentShown = false;
+
     const frame = (now: number) => {
       if (start === null) start = now;
       const t = now - start;
@@ -134,8 +168,12 @@ const PageLoader = ({
       scale *= 1 + ease.reveal(seg(k, REVEAL_AT, REVEAL_FOR)) * 60;
 
       if (content) {
+        const shouldShow = k >= CONTENT_VISIBLE_AT;
+        if (shouldShow !== contentShown) {
+          contentShown = shouldShow;
+          setContentHidden(!shouldShow);
+        }
         const r = ease.arrive(seg(k, REVEAL_AT, REVEAL_FOR));
-        content.style.visibility = k < 700 ? "hidden" : "visible";
         content.style.filter = `blur(${8 * (1 - r)}px)`;
         content.style.transform = `scale(${1.04 - 0.04 * r})`;
       }
@@ -155,6 +193,7 @@ const PageLoader = ({
         content.style.filter = "";
         content.style.transform = "";
         content.style.visibility = "";
+        (content.style as any).contentVisibility = "";
       }
     };
   }, [contentRef]);
