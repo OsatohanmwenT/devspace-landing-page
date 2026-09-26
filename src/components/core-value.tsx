@@ -72,7 +72,7 @@ const AccordionItem = ({ n, label }: { n: string; label: string }) => {
 
 const CoreValue = () => {
   return (
-    <section className="border-b border-neutral-300 px-8 py-40">
+    <section id="how-it-works" tabIndex={-1} className="border-b border-neutral-300 px-8 py-40">
       <span className="text-xs uppercase tracking-wide text-neutral-400">What Devspace does</span>
 
       <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight">

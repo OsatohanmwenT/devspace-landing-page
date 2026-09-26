@@ -5,12 +5,12 @@ import Faq from "./components/faq";
 import FinalCta from "./components/final-cta";
 import Footer from "./components/footer";
 import Header from "./components/header";
-import Hero from "./components/hero";
 import Institutions from "./components/institutions";
 import LearnerProof from "./components/learner-proof";
-import LearningJourney from "./components/learning-journey";
+import { Question } from "./components/learning-journey";
 import Marquee from "./components/marquee";
 import Metrics from "./components/metrics";
+import Opening from "./components/opening";
 import PageLoader from "./components/page-loader";
 import Paths from "./components/paths";
 import Pricing from "./components/pricing";
@@ -25,8 +25,8 @@ const App = () => {
       <PageLoader contentRef={pageRef} onReveal={() => setRevealed(true)} />
       <div ref={pageRef} className="min-h-screen bg-white">
         <Header />
-        <Hero ready={revealed} />
-        <LearningJourney />
+        <Opening ready={revealed} />
+        <Question className="bg-[#f4f2ed]" />
         <Marquee />
         <Metrics />
         <CoreValue />

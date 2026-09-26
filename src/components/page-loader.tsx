@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { FILL_PATH, OPENING_PATH, TRACE_PATH } from "./loader-paths";
 
 // Mark geometry (viewBox units) and the point inside the opening we zoom through.
@@ -43,7 +43,8 @@ const PageLoader = ({
   const onRevealRef = useRef(onReveal);
   onRevealRef.current = onReveal;
 
-  useEffect(() => {
+  // Layout effect, so the mark is centred before the first paint rather than on the first animation frame.
+  useLayoutEffect(() => {
     const world = worldRef.current;
     const trace = traceRef.current;
     const fill = fillRef.current;
@@ -111,6 +112,7 @@ const PageLoader = ({
     }
 
     if (content) content.style.visibility = "hidden";
+    layout(1);
 
     let start: number | null = null;
     let raf = 0;
