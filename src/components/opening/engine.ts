@@ -6,6 +6,13 @@ import { EASE, type Mode, rand } from "./config";
 import { buildCity, type City, type Route } from "./build";
 import { rig, type DevyRig } from "./devy";
 
+type Job = "hammer" | "glance" | "floor" | "crate" | "beam";
+
+// Construction pacing (s): first job after the hero settles, between jobs, then occasional taps.
+const FIRST_JOB_DELAY = 1.2;
+const JOB_GAP = 2.5;
+const IDLE_JOB_GAP = 8;
+
 export class HeroEngine {
   city!: City;
   mode: Mode;
@@ -27,8 +34,6 @@ export class HeroEngine {
 
   private idleOn = false;
   private blinkCall: gsap.core.Tween | null = null;
-  private glanceCall: gsap.core.Tween | null = null;
-  private glanced = false;
   private blinkN = 0;
   private hoverCool = 0;
   private hoverTl: gsap.core.Timeline | null = null;
@@ -58,6 +63,7 @@ export class HeroEngine {
     this.devyG = this.svg.querySelector(".hero-devy") as SVGGElement;
     this.keyInner = this.svg.querySelector(".key-inner") as SVGGElement;
     this.layout();
+    this.applyBuilt();
   }
 
   /** Scale city to the hero's width, anchor to the bottom, keep clear of the copy. */
@@ -219,17 +225,19 @@ export class HeroEngine {
     this.blinkCall?.kill();
     if (on) {
       this.scheduleBlink();
-      if (!this.glanceCall && !this.glanced) this.glanceCall = gsap.delayedCall(6, () => this.glance());
+      // pick the construction back up where it paused, or start the next job
+      if (this.workTl?.paused()) this.workTl.resume();
+      else if (!this.workTl) this.scheduleWork(this.workN === 0 ? FIRST_JOB_DELAY : JOB_GAP);
     } else {
-      this.glanceCall?.kill();
-      this.glanceCall = null;
+      this.workCall?.kill();
+      this.workCall = null;
+      this.workTl?.pause();
     }
   }
 
   private glance() {
-    this.glanced = true;
     const p = this.devy.pupils;
-    gsap
+    return gsap
       .timeline()
       .to(p, { x: -14, y: -16, duration: 0.35, ease: EASE.arrive })
       .to(p, { x: -6, y: 4, duration: 0.45, ease: EASE.arrive }, 1.2);
@@ -253,6 +261,177 @@ export class HeroEngine {
     const tl = gsap.timeline().add(one());
     if (double) tl.add(one(), "+=0.08");
     return tl;
+  }
+
+  // ─────────── Construction: Devy finishes the city while the hero idles ───────────
+  // Jobs run one at a time from a queue, then Devy keeps tapping the keystone now and then.
+  // Everything he builds stays built (see applyBuilt) and fades with the city in T1.
+  private built = new Set<Job>();
+  private workTl: gsap.core.Timeline | null = null;
+  private workCall: gsap.core.Tween | null = null;
+  private workN = 0;
+
+  private q<T extends Element>(sel: string) {
+    return this.svg.querySelector(sel) as T;
+  }
+
+  private scheduleWork(delay: number) {
+    this.workCall?.kill();
+    this.workCall = gsap.delayedCall(delay, () => {
+      this.workCall = null;
+      const job = this.nextJob();
+      this.workN++;
+      const tl = this.jobs[job]();
+      this.workTl = tl;
+      tl.eventCallback("onComplete", () => {
+        if (job !== "hammer" && job !== "glance") this.built.add(job);
+        this.workTl = null;
+        const allBuilt = this.built.size >= this.buildable().length;
+        if (this.idleOn) this.scheduleWork(allBuilt ? IDLE_JOB_GAP + rand(this.workN) * 4 : JOB_GAP);
+      });
+    });
+  }
+
+  /** Jobs this layout has, in order. */
+  private buildable(): Job[] {
+    const w = this.city.work;
+    const jobs: Job[] = [];
+    if (w.floor) jobs.push("floor");
+    if (this.city.layout.crates.length > 1) jobs.push("crate");
+    if (w.beam) jobs.push("beam");
+    return jobs;
+  }
+
+  /** hammer → floor → glance → crate → hammer → beam, skipping anything already built; then hammer taps. */
+  private nextJob(): Job {
+    const queue: Job[] = ["hammer"];
+    this.buildable().forEach((job, i) => {
+      if (i === 1) queue.push("glance");
+      if (i === 2) queue.push("hammer");
+      queue.push(job);
+    });
+    return queue.slice(this.workN).find((j) => j === "hammer" || j === "glance" || !this.built.has(j)) ?? "hammer";
+  }
+
+  private jobs: Record<Job, () => gsap.core.Timeline> = {
+    glance: () => this.glance(),
+
+    /** Three taps on the keystone: sparks, a flash on the stone. */
+    hammer: () => {
+      const d = this.devy;
+      const tl = gsap
+        .timeline()
+        .to(d.pupils, { x: -20, y: 22, duration: 0.25, ease: EASE.arrive }, 0)
+        .to(d.lean, { rotation: -9, svgOrigin: "512 842", duration: 0.25, ease: EASE.move }, 0);
+      for (let i = 0; i < 3; i++) {
+        const t = 0.35 + i * 0.28;
+        tl.to(this.devyG, { y: 1.5, duration: 0.07, ease: "power2.in" }, t)
+          .call(() => this.tap(), [], t + 0.07)
+          .to(this.devyG, { y: 0, duration: 0.12, ease: "power2.out" }, t + 0.07);
+      }
+      return tl
+        .to(d.lean, { rotation: 0, svgOrigin: "512 842", duration: 0.3, ease: EASE.arrive }, 1.3)
+        .to(d.pupils, { x: -6, y: 4, duration: 0.35, ease: EASE.arrive }, 1.3);
+    },
+
+    /** The Development tower's missing floor comes down the hoist line and locks in. */
+    floor: () => {
+      const f = this.city.work.floor!;
+      const d = this.devy;
+      const u = 712 / this.city.layout.devy.h;
+      const blk = this.q<SVGGElement>(".w-floor");
+      const cable = this.q<SVGLineElement>(".cable");
+      const top = f.hoistTop - 160;
+      return gsap
+        .timeline()
+        .to(d.pupils, { x: 24, y: -18, duration: 0.35, ease: EASE.arrive }, 0)
+        .to(d.browL, { y: -6 * u, duration: 0.3, ease: EASE.arrive }, 0)
+        .set(blk, { y: -110, opacity: 0 }, 0)
+        .set(cable, { attr: { y1: top, y2: f.y - 110 }, opacity: 1 }, 0)
+        .to(blk, { opacity: 1, duration: 0.3, ease: "none" }, 0.2)
+        .to(blk, { y: 0, duration: 1.3, ease: EASE.move }, 0.4)
+        .to(cable, { attr: { y2: f.y }, duration: 1.3, ease: EASE.move }, 0.4)
+        .to(blk, { y: -3, duration: 0.08, ease: "power1.out" }, 1.7)
+        .to(blk, { y: 0, duration: 0.1, ease: "power1.in" }, 1.78)
+        .set([this.q(".h-floor"), this.q(".hoist")], { opacity: 0 }, 1.7)
+        .call(() => this.flashEl(blk), [], 1.88)
+        .to(cable, { attr: { y2: top }, duration: 0.5, ease: EASE.leave }, 1.95)
+        .set(cable, { opacity: 0 }, 2.45)
+        // a little celebration
+        .to(this.devyG, { y: -4, duration: 0.12, ease: "power1.out" }, 2.0)
+        .to(this.devyG, { y: 0, duration: 0.14, ease: "power1.in" }, 2.12)
+        .to(this.devyG, { y: -3, duration: 0.1, ease: "power1.out" }, 2.3)
+        .to(this.devyG, { y: 0, duration: 0.12, ease: "power1.in" }, 2.4)
+        .to(d.browL, { y: 0, duration: 0.3 }, 2.2)
+        .to(d.pupils, { x: -6, y: 4, duration: 0.4, ease: EASE.arrive }, 2.5);
+    },
+
+    /** Lifts the small crate up and onto the big one. */
+    crate: () => {
+      const [c1, c2] = this.city.layout.crates;
+      const d = this.devy;
+      const el = this.svg.querySelectorAll<SVGGElement>(".crate")[1];
+      const tx = c1.x + (c1.w - c2.w) / 2 - c2.x;
+      const ty = c1.y - c2.h - c2.y;
+      return gsap
+        .timeline()
+        .to(d.pupils, { x: 22, y: 14, duration: 0.3, ease: EASE.arrive }, 0)
+        .to(d.lean, { rotation: 7, svgOrigin: "512 842", duration: 0.3, ease: EASE.move }, 0)
+        .to(this.devyG, { y: -2, duration: 0.1, ease: "power1.out" }, 0.35)
+        .to(this.devyG, { y: 0, duration: 0.12, ease: "power1.in" }, 0.45)
+        .to(el, { x: tx * 0.5, y: ty - 22, duration: 0.45, ease: EASE.move }, 0.35)
+        .to(el, { x: tx, y: ty, duration: 0.35, ease: EASE.arrive }, 0.8)
+        .to(el, { y: ty - 1.5, duration: 0.06, ease: "power1.out" }, 1.15)
+        .to(el, { y: ty, duration: 0.08, ease: "power1.in" }, 1.21)
+        .to(d.lean, { rotation: 0, svgOrigin: "512 842", duration: 0.35, ease: EASE.arrive }, 0.9)
+        .to(d.pupils, { x: -6, y: 4, duration: 0.4, ease: EASE.arrive }, 1.3);
+    },
+
+    /** The Product bridge's lower beam slides in from the left column. */
+    beam: () => {
+      const bm = this.city.work.beam!;
+      const d = this.devy;
+      const el = this.q<SVGGElement>(".w-beam");
+      return gsap
+        .timeline()
+        .to(d.pupils, { x: 26, y: -6, duration: 0.35, ease: EASE.arrive }, 0)
+        .fromTo(el, { opacity: 1, scaleX: 0, svgOrigin: `${bm.x} ${bm.y + bm.h / 2}` }, { scaleX: 1, duration: 0.7, ease: EASE.move }, 0.3)
+        .set(this.q(".h-beam"), { opacity: 0 }, 1.0)
+        .call(() => this.flashEl(el), [], 1.0)
+        .to(d.pupils, { x: -6, y: 4, duration: 0.4, ease: EASE.arrive }, 1.3);
+    },
+  };
+
+  /** One hammer tap: the stone flashes, sparks fly. */
+  private tap() {
+    const K = this.city.key;
+    this.flashEl(this.q("#m-key"));
+    gsap.fromTo(
+      this.q(".sparks"),
+      { opacity: 1, scale: 0.7, svgOrigin: `${K.x + K.w / 2} ${K.y}` },
+      { opacity: 0, scale: 1.25, duration: 0.25, ease: EASE.arrive, overwrite: true },
+    );
+  }
+
+  private flashEl(el: Element | null) {
+    el?.classList.add("flash");
+    setTimeout(() => el?.classList.remove("flash"), 80);
+  }
+
+  /** After a rebuild (resize), put back everything Devy has already built. */
+  private applyBuilt() {
+    if (this.built.has("floor")) {
+      gsap.set(this.q(".w-floor"), { y: 0, opacity: 1 });
+      gsap.set([this.q(".h-floor"), this.q(".hoist")], { opacity: 0 });
+    }
+    if (this.built.has("crate")) {
+      const [c1, c2] = this.city.layout.crates;
+      gsap.set(this.svg.querySelectorAll(".crate")[1], { x: c1.x + (c1.w - c2.w) / 2 - c2.x, y: c1.y - c2.h - c2.y });
+    }
+    if (this.built.has("beam")) {
+      gsap.set(this.q(".w-beam"), { opacity: 1 });
+      gsap.set(this.q(".h-beam"), { opacity: 0 });
+    }
   }
 
   // ─────────── Interactions ───────────
@@ -346,7 +525,8 @@ export class HeroEngine {
     this.setIdle(false);
     this.seq?.kill();
     this.hoverTl?.kill();
-    this.glanceCall?.kill();
+    this.workCall?.kill();
+    this.workTl?.kill();
     cancelAnimationFrame(this.px.raf);
     this.cleanups.forEach((fn) => fn());
     this.cleanups = [];

@@ -24,6 +24,13 @@ export type City = {
   routes: Route[];
   hoverRoute: Route;
   key: { x: number; y: number; w: number; h: number; startX: number; startY: number };
+  /** Unfinished parts Devy completes while the hero idles (see engine.ts › construction). */
+  work: {
+    /** Development tower's missing top floor, lowered down the hoist line (hoistTop = top of the line). */
+    floor?: { x: number; y: number; w: number; h: number; hoistX: number; hoistTop: number };
+    /** Product bridge's missing lower beam, slid in from the left column. */
+    beam?: { x: number; y: number; w: number; h: number };
+  };
 };
 
 const n = (v: number) => Math.round(v * 10) / 10;
@@ -92,6 +99,7 @@ export function buildCity(mode: Mode): City {
   // ───────────── structures (midground) ─────────────
   const S = L.structures;
   const hints: string[] = [];
+  const work: City['work'] = {};
   const acts: string[] = [];
 
   if (S.design) {
@@ -159,7 +167,8 @@ export function buildCity(mode: Mode): City {
       `<circle class="node" cx="${n(lx + vw + dx)}" cy="${n(by + bh / 2)}" r="3.5"/><circle class="node" cx="${n(rx)}" cy="${n(by + bh / 2)}" r="3.5"/>`,
       { side: false },
     );
-    hints.push(`<rect class="hint" x="${n(lx + vw + dx)}" y="${n(b.base - H * 0.34)}" width="${n(rx - lx - vw - dx)}" height="${n(bh * 0.8)}"/>`);
+    hints.push(`<rect class="hint h-beam" x="${n(lx + vw + dx)}" y="${n(b.base - H * 0.34)}" width="${n(rx - lx - vw - dx)}" height="${n(bh * 0.8)}"/>`);
+    work.beam = { x: lx + vw + dx, y: b.base - H * 0.34, w: rx - lx - vw - dx, h: bh * 0.8 };
     acts.push(`<circle class="act act-product" cx="${n(rx)}" cy="${n(by + bh / 2)}" r="3.5"/>`);
     addRoute('product', lx + vw / 2, b.base - H * 0.5 + 12);
   }
@@ -194,8 +203,9 @@ export function buildCity(mode: Mode): City {
       mod(`dev-m${i + 1}`, 'dev', x, y, w, h, det);
     }
     // unbuilt floor + hoist line
-    hints.push(`<rect class="hint" x="${n(topX)}" y="${n(b.top - h * 0.6)}" width="${n(topW)}" height="${n(h * 0.6)}"/>`);
+    hints.push(`<rect class="hint h-floor" x="${n(topX)}" y="${n(b.top - h * 0.6)}" width="${n(topW)}" height="${n(h * 0.6)}"/>`);
     hints.push(line(topX + topW * 0.7, b.top - h * 0.6 - 46, topX + topW * 0.7, b.top - h * 0.6, 'hint hoist'));
+    work.floor = { x: topX, y: b.top - h * 0.6, w: topW, h: h * 0.6, hoistX: topX + topW * 0.7, hoistTop: b.top - h * 0.6 - 46 };
     // cursor at the end of the top code stroke
     const cy = b.top + 10;
     const cx = topX + 10 + (topW - 30) * 0.55 + 4;
@@ -269,6 +279,30 @@ export function buildCity(mode: Mode): City {
     ? `<g class="beam" transform="rotate(${L.beam.rot} ${L.beam.x + L.beam.w / 2} ${L.beam.y})"><rect x="${L.beam.x}" y="${L.beam.y}" width="${L.beam.w}" height="${L.beam.h}"/>${Array.from({ length: 8 }, (_, i) => line(L.beam!.x + i * (L.beam!.w / 8), L.beam!.y, L.beam!.x + (i + 1) * (L.beam!.w / 8), L.beam!.y + L.beam!.h)).join('')}</g>`
     : '';
 
+  // construction pieces (hidden until Devy builds them)
+  const works: string[] = [];
+  if (work.floor) {
+    const f = work.floor;
+    works.push(
+      `<line class="cable" x1="${n(f.hoistX)}" y1="${n(f.hoistTop)}" x2="${n(f.hoistX)}" y2="${n(f.hoistTop)}"/>` +
+        `<g class="w-floor"><polygon class="s" points="${n(f.x + f.w)},${n(f.y)} ${n(f.x + f.w + dx)},${n(f.y + dy)} ${n(f.x + f.w + dx)},${n(f.y + f.h + dy)} ${n(f.x + f.w)},${n(f.y + f.h)}"/>` +
+        `<polygon class="t" points="${n(f.x)},${n(f.y)} ${n(f.x + dx)},${n(f.y + dy)} ${n(f.x + f.w + dx)},${n(f.y + dy)} ${n(f.x + f.w)},${n(f.y)}"/>` +
+        `<rect class="f" x="${n(f.x)}" y="${n(f.y)}" width="${n(f.w)}" height="${n(f.h)}"/>` +
+        `<g class="d">${line(f.x + f.w / 3, f.y + 4, f.x + f.w / 3, f.y + f.h - 4)}${line(f.x + (2 * f.w) / 3, f.y + 4, f.x + (2 * f.w) / 3, f.y + f.h - 4)}</g></g>`,
+    );
+  }
+  if (work.beam) {
+    const bm = work.beam;
+    works.push(`<g class="w-beam"><rect class="f" x="${n(bm.x)}" y="${n(bm.y)}" width="${n(bm.w)}" height="${n(bm.h)}"/></g>`);
+  }
+  const kx = F.gapX + F.gapW / 2;
+  works.push(
+    `<g class="sparks">${[-150, -115, -65, -30].map((a) => {
+      const t = (a * Math.PI) / 180;
+      return line(kx + Math.cos(t) * 6, F.top - 2 + Math.sin(t) * 6, kx + Math.cos(t) * 13, F.top - 2 + Math.sin(t) * 13);
+    }).join('')}</g>`,
+  );
+
   // signal layer (moving 60-unit segments), drawn above everything in the midground
   const sig = routes
     .map((r) => `<path class="sig" data-struct="${r.struct}" d="${r.d}" pathLength="1"/>`)
@@ -281,6 +315,7 @@ export function buildCity(mode: Mode): City {
     <g class="hints">${hints.join('')}${gapHint}</g>
     <g class="mods">${out.join('')}</g>
     <g class="acts">${acts.join('')}</g>
+    <g class="works">${works.join('')}</g>
     ${joint}
     ${crates}
     ${devy}
@@ -296,5 +331,6 @@ export function buildCity(mode: Mode): City {
     routes,
     hoverRoute: hoverTarget ?? routes[0],
     key,
+    work,
   };
 }

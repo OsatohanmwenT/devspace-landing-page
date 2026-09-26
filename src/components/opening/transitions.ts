@@ -39,7 +39,7 @@ export function createT1(hero: Hero, scene: Scene, mode: Mode, dom: StageDom) {
     .to(hero.keyInner, { y: -6, rotation: 3, duration: 0.25, ease: EASE.move }, D + 0.15)
     .to(hero.devy.browR, { y: -28, duration: 0.25, ease: EASE.arrive }, D + 0.15)
     .to(hero.devyG, { x: '+=6', duration: 0.25, ease: EASE.arrive }, D + 0.15)
-    .to(svg.querySelectorAll('.hints, .acts, .crate, .sigs, .joint'), { opacity: 0, duration: 0.4, ease: EASE.leave }, D + 0.2);
+    .to(svg.querySelectorAll('.hints, .acts, .works, .crate, .sigs, .joint'), { opacity: 0, duration: 0.4, ease: EASE.leave }, D + 0.2);
 
   // structure centres
   const centres: Record<string, { x: number; y: number; top: number; base: number }> = {};

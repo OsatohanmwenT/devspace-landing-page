@@ -6,6 +6,9 @@ import { sceneGeo, smoothPath, type SceneGeo, type CP } from './geometry';
 import { cardMarkup, type CardKey } from './artefacts';
 import { devySvg, rig, type DevyRig, DEVY_VIEWBOX, DEVY_FEET_Y, DEVY_CENTER_X } from './devy';
 
+/** Progress at which the path has (almost) reached its end and the question appears. */
+const END_MARK_AT = 0.985;
+
 type CardRt = {
   key: CardKey; el: HTMLElement; trigger: number; cpP: number; named: boolean;
   state: 'hidden' | 'dormant' | 'arrived'; aged: boolean;
@@ -26,6 +29,7 @@ export class Scene {
   devy!: DevyRig;
   walker!: HTMLDivElement;
   caption!: HTMLDivElement;
+  endMark!: HTMLDivElement;
   s = 1; // scene → screen scale
   cam = { x: 0, y: 0, s: 1 };
   camLocked = false; // T2 owns the camera
@@ -127,6 +131,15 @@ export class Scene {
       const trigger = c.named ? cpP - 120 / this.L : cpP + (c.after ?? 0) / this.L;
       return { key: c.key, el, trigger, cpP, named: !!c.named, state: 'hidden', aged: false } as CardRt;
     });
+
+    // "What's next?" at the end of the line, shown once the pen gets there
+    const end = g.points[g.points.length - 1];
+    this.endMark = document.createElement('div');
+    this.endMark.className = 'end-mark';
+    this.endMark.style.left = end[0] + 'px';
+    this.endMark.style.top = end[1] + 'px';
+    this.endMark.innerHTML = `<span class="q" aria-hidden="true">?</span><span>What’s next?</span>`;
+    this.cardsLayer.appendChild(this.endMark);
 
     // Devy walker
     this.walker = document.createElement('div');
@@ -233,6 +246,7 @@ export class Scene {
       const aged = (p > this.pStop && p - c.cpP > 0.14) || (c.key === 'course' && p >= switchP);
       if (aged !== c.aged) { c.aged = aged; c.el.classList.toggle('aged', aged); }
     }
+    this.endMark.classList.toggle('on', p >= END_MARK_AT);
     this.renderDevy(p, prev);
   }
   dormantVisible = true;

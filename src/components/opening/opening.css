@@ -84,6 +84,10 @@
 @keyframes opening-hero-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
 .opening .city .sig { fill: none; stroke: var(--signal); stroke-linecap: round; stroke-dasharray: 0 1; opacity: 0; }
 .opening .city .flash .f, .opening .city .flash .t { stroke: var(--ink); }
+/* construction: pieces Devy builds while the hero idles */
+.opening .city .w-floor, .opening .city .w-beam, .opening .city .sparks, .opening .city .cable { opacity: 0; }
+.opening .city .cable { stroke: rgb(14 17 22 / 0.7); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.opening .city .sparks line { stroke: var(--ink); stroke-width: 1.25; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 
 /* ───────── Fragmentation (spec §14–16) ───────── */
 .opening #frag { pointer-events: none; }
@@ -150,6 +154,11 @@
 .opening .card.sticky .pad { font: 500 14px/19px var(--ui); color: #4a4424; }
 .opening .card.tabs { background: none; border: 0; box-shadow: none; overflow: visible; }
 .opening .card.tabs .tab { position: absolute; left: 0; right: 0; height: 30px; background: #fff; border: 1px solid var(--line); border-radius: 8px 8px 0 0; font: 400 11.5px/28px var(--ui); color: var(--graphite); padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* "What's next?" at the end of the path: circle centred on the last point, label to its right */
+.opening .scene .end-mark { position: absolute; z-index: 10; display: flex; align-items: center; gap: 8px; translate: -18px -50%; font: 600 14px/1 var(--ui); color: var(--ink); white-space: nowrap; opacity: 0; scale: 0.9; transform-origin: 18px 50%; transition: opacity 0.3s var(--ease-arrive), scale 0.3s var(--ease-arrive); }
+.opening .scene .end-mark.on { opacity: 1; scale: 1; }
+.opening .scene .end-mark .q { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; border: 2px dashed var(--ink); background: var(--paper); font: 700 17px/1 var(--display); }
 
 /* devy in scene */
 .opening .scene .walker { position: absolute; left: 0; top: 0; width: 1px; height: 1px; }
