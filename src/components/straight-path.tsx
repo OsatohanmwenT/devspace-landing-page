@@ -28,7 +28,10 @@ const LINES = [
 const MORPH_END = 0.26; // the tangle is straight by here
 const FILL_START = 0.28;
 const FILL_END = 0.86;
-const BOTTOM_SPACE_VH = 20;
+// Once the line is complete it holds (desktop, still pinned) before the section scrolls on.
+// This is part of the section's height (md:h-[310vh] = 100 screen + 180 scrubbed + 30 hold),
+// not padding: a sticky stage only stays pinned within its section's content box.
+const BOTTOM_SPACE_VH = 30;
 // Points sampled along the tangle for the morph.
 const MORPH_POINTS = 160;
 
@@ -329,7 +332,7 @@ const StraightPath = () => {
   return (
     <section
       ref={sectionRef}
-      className="straight-path relative bg-[#f4f2ed] md:box-content md:h-[280vh] md:pb-[20vh]"
+      className="straight-path relative bg-[#f4f2ed] md:h-[310vh]"
       aria-labelledby="straight-path-title"
       style={{ "--fill": 0, "--morph": 0 } as CSSProperties}
     >

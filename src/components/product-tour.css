@@ -1,13 +1,6 @@
 /* Each chapter has one visual anchor. Travel is triggered, never half-scrubbed. */
 .product-tour { --tour-ink: #15171b; --tour-muted: #63665f; background: #f4f2ed; color: var(--tour-ink); }
 .scene-eyebrow { display: block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
-.site-header { position: absolute; inset: 0 0 auto; z-index: 20; height: 96px; padding: 0 5%; display: flex; align-items: center; justify-content: space-between; gap: 24px; color: #15171b; }
-.site-header nav { display: flex; gap: 32px; font-size: 13px; }
-.site-header a { text-decoration: none; }
-.site-header nav a { transition: opacity .2s; }
-.site-header nav a:hover { opacity: .55; }
-.header-cta { padding: 12px 18px; border: 1px solid #15171b40; border-radius: 6px; font-size: 12px; }
-.header-cta span { margin-left: 18px; }
 a:focus-visible { outline: 2px solid #2458f5; outline-offset: 6px; }
 .product-tour .tour-intro { min-height: 78svh; padding: 140px 6% 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .product-tour .tour-intro h2, .tour-end h2 { margin: 28px 0 0; font-size: clamp(38px, 5.2vw, 76px); font-weight: 500; line-height: 1.06; letter-spacing: -.055em; }
@@ -15,7 +8,7 @@ a:focus-visible { outline: 2px solid #2458f5; outline-offset: 6px; }
 .product-tour .tour-intro p { margin-top: 24px; color: var(--tour-muted); font-size: 16px; }
 .tour-start { margin-top: 40px; display: flex; align-items: center; gap: 32px; font-size: 12px; }
 .tour-start span { font-size: 22px; }
-.tour-chapter { position: relative; height: 145svh; border-top: 1px solid #15171b20; scroll-margin-top: 0; }
+.tour-chapter { position: relative; height: 130svh; border-top: 1px solid #15171b20; scroll-margin-top: 0; }
 .tour-stage { position: sticky; top: 0; height: 100svh; min-height: 640px; overflow: hidden; max-width: 1800px; margin: auto; }
 .chapter-meta { position: absolute; top: 40px; left: 5%; right: 5%; display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; }
 .chapter-meta i { font-style: normal; margin: 0 10px; opacity: .4; }
@@ -157,11 +150,6 @@ a:focus-visible { outline: 2px solid #2458f5; outline-offset: 6px; }
   .tour-end > img { width: 90px; right: 6%; bottom: -20px; }
 }
 @media (max-width: 767px) {
-  .site-header { height: 80px; gap: 16px; }
-  .site-header nav { display: none; }
-  .header-cta { font-size: 11px; padding: 10px 12px; }
-  .header-cta span { margin-left: 10px; }
-  .site-header img { width: 110px; height: auto; }
   .path-intro .scene-eyebrow { margin-bottom: 20px; }
   .preview-status { display: none; }
   .recommendation { padding: 20px; }

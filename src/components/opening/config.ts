@@ -29,9 +29,9 @@ export function budget(mode: Mode) {
     // Copy departure and the city deconstruction.
     t1End: mobile ? 125 : 130,
     // The learner path is the longest beat: each checkpoint needs time to register.
-    fragEnd: mobile ? 405 : 480,
+    fragEnd: mobile ? 385 : 430,
     // Leave a full final beat for the path to settle into the paper handoff.
-    t2End: mobile ? 505 : 620,
+    t2End: mobile ? 475 : 540,
   };
 }
 

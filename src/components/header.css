@@ -1,0 +1,83 @@
+/* Site header: fixed so navigation stays reachable across the whole page.
+   At the top it sits on the hero as before; once scrolled it becomes a compact paper bar,
+   tucks away while scrolling down (never covering the scenes) and returns on scroll up. */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: 96px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  color: #15171b;
+  transition:
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.35s ease,
+    box-shadow 0.35s ease,
+    translate 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.site-header.is-scrolled {
+  height: 64px;
+  background-color: rgb(244 242 237 / 0.84);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: 0 1px 0 rgb(21 23 27 / 0.08);
+}
+.site-header.is-hidden:not(:focus-within) {
+  translate: 0 -100%;
+}
+.site-header nav {
+  display: flex;
+  gap: 32px;
+  font-size: 13px;
+}
+.site-header a {
+  text-decoration: none;
+}
+.site-header nav a {
+  transition: opacity 0.2s;
+}
+.site-header nav a:hover {
+  opacity: 0.55;
+}
+.header-cta {
+  padding: 12px 18px;
+  border: 1px solid #15171b40;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.header-cta span {
+  margin-left: 18px;
+}
+
+@media (max-width: 767px) {
+  .site-header {
+    height: 80px;
+    gap: 16px;
+  }
+  .site-header.is-scrolled {
+    height: 60px;
+  }
+  .site-header nav {
+    display: none;
+  }
+  .header-cta {
+    font-size: 11px;
+    padding: 10px 12px;
+  }
+  .header-cta span {
+    margin-left: 10px;
+  }
+  .site-header img {
+    width: 110px;
+    height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header {
+    transition: none;
+  }
+}
