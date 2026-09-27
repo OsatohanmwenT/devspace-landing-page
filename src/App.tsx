@@ -15,10 +15,12 @@ const App = () => {
       <PageLoader contentRef={pageRef} onReveal={() => setRevealed(true)} />
       <div ref={pageRef} className="min-h-screen bg-white">
         <Header />
+        <main>
         <Opening ready={revealed} />
         <Question className="question-handoff" />
         <StraightPath />
         <ProductTour />
+        </main>
         {/* <Marquee />
         <Metrics />
         <CoreValue />

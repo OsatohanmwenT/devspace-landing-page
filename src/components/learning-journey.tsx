@@ -394,7 +394,7 @@ export const Question = ({ className = "bg-neutral-50" }: { className?: string }
   let wordIndex = 0;
 
   return (
-    <section ref={sectionRef} className={`relative h-[220vh] ${className}`} aria-labelledby="learning-question-title" style={{ "--p": 0 } as CSSProperties}>
+    <section ref={sectionRef} className={`question-scene relative h-[180vh] ${className}`} aria-labelledby="learning-question-title" style={{ "--p": 0 } as CSSProperties}>
       <div className="sticky top-0 flex h-screen items-center justify-center px-6 text-center">
         <h2
           id="learning-question-title"

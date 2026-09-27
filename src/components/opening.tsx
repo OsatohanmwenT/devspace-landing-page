@@ -47,7 +47,7 @@ const Opening = ({ ready = true }: { ready?: boolean }) => {
             </h1>
             <p>Learn the right things, build real work, and prove what you can do.</p>
             <div className="actions">
-              <a className="btn btn-primary cta-start" href="#">
+              <a className="btn btn-primary cta-start" href="#paths">
                 Start learning <span className="ar" aria-hidden="true">→</span>
               </a>
               <a className="btn btn-secondary cta-how" href="#how-it-works">
