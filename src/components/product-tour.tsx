@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import "./product-tour.css";
 
 const STEPS = [
@@ -36,35 +36,35 @@ const Preview = ({ step }: { step: number }) => (
     {step === 0 && <div className="preview-body">
       <span className="preview-label">MADE FOR YOUR NEXT CHAPTER</span>
       <h4>Where do you want to go?</h4>
-      <div className="goal-tags"><span>Build for the web</span><span>Start from the basics</span><span>5 hours a week</span></div>
-      <div className="recommendation"><div className="recommendation-top"><span>↗</span><span>RECOMMENDED FOR YOU</span></div><h5>Frontend development</h5><p>From your first line of HTML to a project you can share.</p><div className="preview-route"><i /><b /><i /><b /><i /><b /><i /></div><div className="preview-row"><span>6 milestones</span><strong>A path, not a pile of links ↗</strong></div></div>
-      <div className="devy-note"><img src="/devy.svg" alt="" /><p>Start with the foundations.<br /><strong>We’ll build from there, together.</strong></p></div>
+      <div className="goal-tags"><span className="g" style={{ "--d": "0.8s" } as CSSProperties}>Build for the web</span><span className="g" style={{ "--d": "0.9s" } as CSSProperties}>Start from the basics</span><span className="g" style={{ "--d": "1.0s" } as CSSProperties}>5 hours a week</span></div>
+      <div className="recommendation g" style={{ "--d": "1.15s" } as CSSProperties}><div className="recommendation-top"><span>↗</span><span>RECOMMENDED FOR YOU</span></div><h5>Frontend development</h5><p>From your first line of HTML to a project you can share.</p><div className="preview-route"><i /><b className="g" style={{ "--d": "1.45s" } as CSSProperties} /><i /><b className="g" style={{ "--d": "1.6s" } as CSSProperties} /><i /><b className="g" style={{ "--d": "1.75s" } as CSSProperties} /><i /></div><div className="preview-row"><span>6 milestones</span><strong>A path, not a pile of links ↗</strong></div></div>
+      <div className="devy-note g" style={{ "--d": "2.0s" } as CSSProperties}><img src="/devy.svg" alt="" /><p>Start with the foundations.<br /><strong>We’ll build from there, together.</strong></p></div>
     </div>}
     {step === 1 && <div className="preview-body">
       <div className="preview-row"><span className="preview-label">YOUR FIRST WEB PAGE</span><span className="lesson-count">02 / 06</span></div>
       <h4>Give your ideas a structure.</h4>
-      <div className="lesson-video"><span className="html-tag">&lt;main&gt;</span><span className="video-play">▶</span><span className="video-caption">HTML, explained visually <b>04:32</b></span></div>
+      <div className="lesson-video g" style={{ "--d": "0.8s" } as CSSProperties}><span className="html-tag">&lt;main&gt;</span><span className="video-play g g-pop" style={{ "--d": "1.0s" } as CSSProperties}>▶</span><span className="video-caption">HTML, explained visually <b>04:32</b></span></div>
       <div className="lesson-tabs"><span>Understand</span><span>Watch</span><span className="selected">Practise</span></div>
-      <div className="exercise"><span className="preview-label">YOUR TURN</span><p>Add a heading. Make it yours.</p><code>&lt;h1&gt;Hello, world.&lt;/h1&gt;</code></div>
+      <div className="exercise g" style={{ "--d": "1.3s" } as CSSProperties}><span className="preview-label">YOUR TURN</span><p>Add a heading. Make it yours.</p><code className="g g-write" style={{ "--d": "1.55s" } as CSSProperties}>&lt;h1&gt;Hello, world.&lt;/h1&gt;</code></div>
     </div>}
     {step === 2 && <div className="editor-body">
       <div className="editor-tab"><span>●</span> app.js <span>Live editor</span></div>
-      <pre><code><span className="code-comment">// A small idea, brought to life.</span>{'\n\n'}<span className="code-purple">const</span> greeting = <span className="code-green">"Hello, world."</span>;{'\n\n'}<span className="code-purple">function</span> welcome(name) {'{'}{'\n'}  <span className="code-purple">return</span> `Hello, ${'{'}name{'}'}!`;{'\n'}{'}'}{'\n\n'}console.log(welcome(<span className="code-green">"builder"</span>));</code></pre>
-      <div className="editor-output"><span>CONSOLE <b>✓ Ran successfully</b></span><p>Hello, builder!</p></div>
-      <div className="devy-note"><img src="/devy.svg" alt="" /><p><strong>Devy is right here.</strong><br />Highlight a line. Let’s work through it.</p></div>
+      <pre className="g g-code" style={{ "--d": "0.8s" } as CSSProperties}><code><span className="code-comment">// A small idea, brought to life.</span>{'\n\n'}<span className="code-purple">const</span> greeting = <span className="code-green">"Hello, world."</span>;{'\n\n'}<span className="code-purple">function</span> welcome(name) {'{'}{'\n'}  <span className="code-purple">return</span> `Hello, ${'{'}name{'}'}!`;{'\n'}{'}'}{'\n\n'}console.log(welcome(<span className="code-green">"builder"</span>));</code></pre>
+      <div className="editor-output g" style={{ "--d": "2.0s" } as CSSProperties}><span>CONSOLE <b>✓ Ran successfully</b></span><p>Hello, builder!</p></div>
+      <div className="devy-note g" style={{ "--d": "2.3s" } as CSSProperties}><img src="/devy.svg" alt="" /><p><strong>Devy is right here.</strong><br />Highlight a line. Let’s work through it.</p></div>
     </div>}
     {step === 3 && <div className="preview-body">
       <span className="preview-label">BUILT BY YOU</span><h4>Your work speaks for itself.</h4>
-      <div className="project-art"><div className="project-orbit" /><span>My first<br /><strong>real project.</strong></span><span className="project-live">↗ Live project</span></div>
-      <div className="submission"><div><span className="submission-icon">↗</span><p><strong>Personal portfolio</strong><br /><span>Live link attached</span></p><b>✓</b></div><div><span className="submission-icon">≡</span><p><strong>What I learned</strong><br /><span>Reflection added</span></p><b>✓</b></div></div>
-      <div className="review-note">Ready for feedback <span>→</span></div>
+      <div className="project-art g" style={{ "--d": "0.8s" } as CSSProperties}><div className="project-orbit" /><span>My first<br /><strong>real project.</strong></span><span className="project-live">↗ Live project</span></div>
+      <div className="submission"><div className="g" style={{ "--d": "1.1s" } as CSSProperties}><span className="submission-icon">↗</span><p><strong>Personal portfolio</strong><br /><span>Live link attached</span></p><b className="g g-pop" style={{ "--d": "1.3s" } as CSSProperties}>✓</b></div><div className="g" style={{ "--d": "1.4s" } as CSSProperties}><span className="submission-icon">≡</span><p><strong>What I learned</strong><br /><span>Reflection added</span></p><b className="g g-pop" style={{ "--d": "1.6s" } as CSSProperties}>✓</b></div></div>
+      <div className="review-note g" style={{ "--d": "1.85s" } as CSSProperties}>Ready for feedback <span>→</span></div>
     </div>}
     {step === 4 && <div className="preview-body">
       <span className="preview-label">LOOK HOW FAR YOU’VE COME</span><h4>It all adds up.</h4>
-      <div className="progress-summary"><div><strong>1,240</strong><span>XP earned</span></div><img src="/devy-celebration.svg" alt="Devy celebrating your progress" /></div>
-      <div className="week-progress">{['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => <div key={i} className={i < 5 ? 'complete' : ''}><span>{day}</span><b>{i < 5 ? '✓' : '·'}</b></div>)}</div>
-      <div className="preview-row progress-streak"><strong>5 days. Still building.</strong><span>Keep your streak going ↗</span></div>
-      <div className="milestone"><span>✳</span><div><strong>First project shipped</strong><p>That’s more than a lesson completed.</p></div></div>
+      <div className="progress-summary g" style={{ "--d": "0.8s" } as CSSProperties}><div><strong>1,240</strong><span>XP earned</span></div><img src="/devy-celebration.svg" alt="Devy celebrating your progress" /></div>
+      <div className="week-progress">{['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => <div key={i} className={i < 5 ? 'complete' : ''}><span>{day}</span><b className={i < 5 ? 'g' : undefined} style={{ '--d': `${1.0 + i * 0.12}s` } as CSSProperties}>{i < 5 ? '✓' : '·'}</b></div>)}</div>
+      <div className="preview-row progress-streak g" style={{ "--d": "1.75s" } as CSSProperties}><strong>5 days. Still building.</strong><span>Keep your streak going ↗</span></div>
+      <div className="milestone g" style={{ "--d": "1.95s" } as CSSProperties}><span>✳</span><div><strong>First project shipped</strong><p>That’s more than a lesson completed.</p></div></div>
     </div>}
   </div>
 );

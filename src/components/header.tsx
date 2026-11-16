@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import "./header.css";
 
-// Below this much scroll the header stays on the hero; past it, it tucks away on scroll down.
+// Past this much scroll the header floats away when heading down the page, and back on any scroll up.
 const HIDE_AFTER_VH = 60;
 
 const Header = () => {
@@ -35,13 +35,18 @@ const Header = () => {
 
   return (
     <header ref={ref} className="site-header">
-      <a href="#hero" aria-label="Devspace home"><img src="/logo-dark.svg" width="129" height="19" alt="Devspace" /></a>
+      <a className="brand" href="#hero" aria-label="Devspace home"><img src="/logo-dark.svg" width="129" height="19" alt="Devspace" /></a>
       <nav aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
         <a href="#paths">Paths</a>
         <a href="#lessons">Lessons</a>
         <a href="#progress">Progress</a>
       </nav>
-      <a className="header-cta" href="#how-it-works">Explore Devspace <span aria-hidden="true">↗</span></a>
+      <div className="actions">
+        {/* placeholder until the sign-in page exists */}
+        <a className="login" href="#">Log in</a>
+        <a className="header-cta" href="#paths">Start learning <span aria-hidden="true">→</span></a>
+      </div>
     </header>
   );
 };

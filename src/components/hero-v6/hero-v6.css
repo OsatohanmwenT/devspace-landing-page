@@ -1,5 +1,5 @@
-/* Anton (SIL OFL) via Google Fonts: the condensed display face. */
-@import url("https://fonts.googleapis.com/css2?family=Anton&display=swap");
+/* Anton (display) and Familjen Grotesk (everything else), both SIL OFL via Google Fonts. */
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=Familjen+Grotesk:wght@400..700&display=swap");
 
 /* Hero v6 prototype. View at /?hero=v6.
    One column. One stage. One accent.
@@ -15,7 +15,7 @@
   --paper: #f7f6f3;
   --lime: #d9fa3e;
 
-  --ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ui: "Familjen Grotesk", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --inset: clamp(8px, 1.1vw, 16px);
   --nav-h: 64px;
@@ -25,7 +25,7 @@
   --display: "Anton", "Impact", sans-serif;
   --d-weight: 400;
   --d-case: uppercase;
-  --d-size: clamp(44px, 6.9vw, 124px);
+  --d-size: clamp(44px, 6.1vw, 110px);
   --d-lh: 1.02;
   --d-track: 0;
 
@@ -128,7 +128,7 @@
   box-sizing: content-box !important;
   height: 1em;
   margin-top: 0.14em;
-  font-size: 0.88em;
+  font-size: 0.72em;
   padding: 0.06em 0.2em 0.08em;
   border: max(2px, 0.022em) solid var(--ink);
   border-radius: 0.16em;
@@ -138,25 +138,43 @@
   line-height: 1;
   vertical-align: top;
   overflow: hidden;
-  rotate: -1.5deg;
-  transition: width 0.5s var(--ease);
+  rotate: -1deg;
+  /* resizes in the gap between the old word leaving and the new one arriving */
+  transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.06s;
 }
 .v6-word {
   position: absolute;
-  left: 0.2em;
+  left: 50%; /* centred in the chip, so it stays centred even while the chip is resizing */
   top: 0.06em;
+  translate: -50% 0;
   line-height: 1;
   white-space: nowrap;
-  transform: translateY(115%);
+  /* resting state: waiting just below, invisible */
+  opacity: 0;
+  filter: blur(0.06em);
+  transform: translateY(55%);
+  will-change: transform, opacity;
 }
-.v6-word.is-in { transform: none; transition: transform 0.5s var(--ease); }
-.v6-word.is-out { transform: translateY(-115%); transition: transform 0.3s cubic-bezier(0.5, 0, 0.8, 0.4); }
+/* The swap is a hand-off, not a collision: the old word is gone (0.22s) before the new one
+   is readable (starts at 0.2s), so two words are never legible on top of each other. */
+.v6-word.is-in {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition: opacity 0.35s ease-out 0.2s, filter 0.45s ease-out 0.2s, transform 0.7s var(--ease) 0.2s;
+}
+.v6-word.is-out {
+  opacity: 0;
+  filter: blur(0.06em);
+  transform: translateY(-45%);
+  transition: opacity 0.2s ease-in, filter 0.22s ease-in, transform 0.24s cubic-bezier(0.4, 0, 1, 1);
+}
 
 .v6-sub {
   max-width: 27em;
   margin: clamp(18px, 3.2vh, 30px) 0 0;
   color: rgb(255 255 255 / 0.86);
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.5;
   letter-spacing: -0.01em;
   text-wrap: balance;
@@ -185,6 +203,26 @@
 }
 .v6-pose.is-in { opacity: 1; transform: none; transition: opacity 0.25s ease-out 0.22s, transform 0.6s var(--ease) 0.22s; }
 
+/* ── learners in the side gutters: upright cards, never over the centre column ── */
+.v6-faces { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.v6-face {
+  --s: calc(clamp(88px, 9vw, 146px) * var(--k));
+  position: absolute;
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  overflow: visible;
+  /* the same hard lip as the button and the headline chip */
+  filter: drop-shadow(0 4px 0 var(--ink));
+  animation: v6-pop 0.6s var(--ease) calc(0.7s + var(--d) * -0.05) both, v6-float 7s ease-in-out var(--d) infinite alternate;
+}
+.v6-face-l { left: var(--x); }
+.v6-face-r { right: var(--x); }
+.v6-card-edge { fill: none; stroke: var(--ink); stroke-width: 2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+@keyframes v6-pop { from { opacity: 0; scale: 0.6; } }
+@keyframes v6-float { from { translate: 0 -5px; } to { translate: 0 5px; } }
+@media (max-width: 960px) { .v6-faces { display: none; } }
+
 /* ── entrance: top to bottom, ending on Devy ─────────── */
 @keyframes v6-rise { from { opacity: 0; transform: translateY(0.35em); } }
 @keyframes v6-up { from { transform: translateY(60%); } }
@@ -197,7 +235,7 @@
 
 /* ── short laptops: keep Devy's face clear of the buttons ── */
 @media (max-height: 760px) and (min-width: 721px) {
-  .hero-v6 { --d-size: clamp(44px, 6.1vw, 104px); }
+  .hero-v6 { --d-size: clamp(44px, 5.5vw, 94px); }
 }
 
 /* ── phone: same column, the headline wraps on its own ── */
@@ -206,7 +244,6 @@
   .v6-nav { grid-template-columns: 1fr auto; padding: 0 16px; }
   .v6-links, .v6-login { display: none; }
   .v6-line { white-space: normal; text-wrap: balance; }
-  .v6-chip { font-size: 0.74em; }
   .v6-sub { max-width: 22em; }
 }
 

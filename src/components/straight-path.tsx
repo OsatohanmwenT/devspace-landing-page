@@ -332,7 +332,7 @@ const StraightPath = () => {
   return (
     <section
       ref={sectionRef}
-      className="straight-path relative bg-[#f4f2ed] md:h-[310vh]"
+      className="straight-path relative bg-white md:h-[310vh]"
       aria-labelledby="straight-path-title"
       style={{ "--fill": 0, "--morph": 0 } as CSSProperties}
     >
