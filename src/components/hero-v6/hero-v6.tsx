@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type React from "react";
+import { smoothFollow } from "../../lib/smooth-scroll";
+import Cta from "./cta";
+import Question from "./question";
 import "./hero-v6.css";
 
 /* One column, one focus. The eye runs straight down the centre:
@@ -33,12 +36,12 @@ const SHAPES = {
 } as const;
 
 const FACES = [
-  { id: "frontend", shape: "tab", tone: "#e3dcfa", side: "l", x: 5, y: 11, size: 1, delay: 0 },
-  { id: "data", shape: "notch", tone: "#fbe0b8", side: "l", x: 13, y: 43, size: 0.86, delay: -2.4 },
-  { id: "security", shape: "step", tone: "#d6e4fb", side: "l", x: 4, y: 70, size: 0.94, delay: -4.1 },
-  { id: "backend", shape: "step", tone: "#d8f1fa", side: "r", x: 5, y: 10, size: 0.96, delay: -1.2 },
-  { id: "ai", shape: "tab", tone: "#f6ecdf", side: "r", x: 13, y: 42, size: 0.86, delay: -3.3 },
-  { id: "devops", shape: "notch", tone: "#dcebd3", side: "r", x: 4, y: 69, size: 1, delay: -5 },
+  { id: "frontend", shape: "tab", tone: "#e3dcfa", side: "l", x: 5, y: 11, size: 1, delay: 0, depth: 22 },
+  { id: "data", shape: "notch", tone: "#fbe0b8", side: "l", x: 13, y: 43, size: 0.86, delay: -2.4, depth: 12 },
+  { id: "security", shape: "step", tone: "#d6e4fb", side: "l", x: 4, y: 70, size: 0.94, delay: -4.1, depth: 17 },
+  { id: "backend", shape: "step", tone: "#d8f1fa", side: "r", x: 5, y: 10, size: 0.96, delay: -1.2, depth: 18 },
+  { id: "ai", shape: "tab", tone: "#f6ecdf", side: "r", x: 13, y: 42, size: 0.86, delay: -3.3, depth: 11 },
+  { id: "devops", shape: "notch", tone: "#dcebd3", side: "r", x: 4, y: 69, size: 1, delay: -5, depth: 24 },
 ] as const;
 
 const params = () => new URLSearchParams(window.location.search);
@@ -52,6 +55,8 @@ const heldBeat = () => {
 };
 const HeroV6 = () => {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const [beat, setBeat] = useState(() => heldBeat() ?? 0);
   const [prev, setPrev] = useState(-1);
@@ -70,7 +75,7 @@ const HeroV6 = () => {
 
   // Advance only while the hero is on screen and the tab is visible.
   useEffect(() => {
-    const root = rootRef.current;
+    const root = heroRef.current;
     if (!root || prefersReduced() || heldBeat() !== null) return;
 
     let onScreen = true;
@@ -99,25 +104,104 @@ const HeroV6 = () => {
     };
   }, []);
 
+  /* Scroll. The hero is not pinned and nothing covers it: it leaves with the page, as on the
+     reference sites. --p (0 to 1 across the hero, eased with the shared follower) only adds a
+     little depth: the face cards rise slightly faster than the stage. The nav stays put and
+     picks up a solid backing once the page has moved. */
+  useEffect(() => {
+    const root = rootRef.current;
+    const hero = heroRef.current;
+    const nav = navRef.current;
+    if (!root || !hero || !nav) return;
+
+    const progress = () => Math.min(1, Math.max(0, window.scrollY / Math.max(1, hero.offsetHeight)));
+    const follow = smoothFollow(progress, (p) => root.style.setProperty("--p", p.toFixed(4)));
+
+    const onScroll = () => {
+      nav.classList.toggle("is-scrolled", window.scrollY > 24);
+      if (prefersReduced()) follow.snap();
+      else follow.kick();
+    };
+    onScroll();
+    follow.snap();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      follow.cancel();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  /* Cursor depth. Moving the pointer over the hero nudges the face cards a few pixels the
+     opposite way, each by its own amount, so they read as floating at different distances.
+     Eased toward the pointer and asleep when settled; off for touch and reduced motion. */
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || prefersReduced() || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+    let tx = 0;
+    let ty = 0;
+    let x = 0;
+    let y = 0;
+    let raf = 0;
+    const step = () => {
+      raf = 0;
+      x += (tx - x) * 0.085;
+      y += (ty - y) * 0.085;
+      if (Math.abs(tx - x) < 0.001 && Math.abs(ty - y) < 0.001) {
+        x = tx;
+        y = ty;
+      }
+      hero.style.setProperty("--mx", x.toFixed(4));
+      hero.style.setProperty("--my", y.toFixed(4));
+      if (x !== tx || y !== ty) raf = requestAnimationFrame(step);
+    };
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(step);
+    };
+    const onMove = (e: PointerEvent) => {
+      const r = hero.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / r.width) * 2 - 1; // -1 at the left edge, 1 at the right
+      ty = ((e.clientY - r.top) / r.height) * 2 - 1;
+      kick();
+    };
+    const onLeave = () => {
+      tx = 0;
+      ty = 0;
+      kick();
+    };
+    hero.addEventListener("pointermove", onMove);
+    hero.addEventListener("pointerleave", onLeave);
+    return () => {
+      cancelAnimationFrame(raf);
+      hero.removeEventListener("pointermove", onMove);
+      hero.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+
   const pose = BEATS[beat].pose;
 
   return (
     <div ref={rootRef} className="hero-v6">
-      <header className="v6-nav">
-        <a className="v6-brand" href="#" aria-label="Devspace home">
-          <img src="/logo-dark.svg" width="129" height="19" alt="Devspace" />
-        </a>
-        <nav className="v6-links" aria-label="Main navigation">
-          <a href="#how-it-works">How it works</a>
-          <a href="#paths">Learning paths</a>
-          <a href="#pricing">Pricing</a>
-        </nav>
+      <header ref={navRef} className="v6-nav">
+        <div className="v6-nav-main">
+          <a className="v6-brand" href="#" aria-label="Devspace home">
+            <img src="/logo-dark.svg" width="129" height="19" alt="Devspace" />
+          </a>
+          <nav className="v6-links" aria-label="Main navigation">
+            <a href="#how-it-works">How it works</a>
+            <a href="#paths">Learning paths</a>
+            <a href="#pricing">Pricing</a>
+          </nav>
+        </div>
         <div className="v6-actions">
           <a className="v6-login" href="#">Log in</a>
           <a className="v6-btn v6-btn-ink" href="#paths">Get started</a>
         </div>
       </header>
 
+      <div ref={heroRef} className="v6-hero">
       <main className="v6-stage">
         <div className="v6-copy">
           <h1 aria-label="Learn tech, built around you.">
@@ -157,7 +241,7 @@ const HeroV6 = () => {
                 key={f.id}
                 className={`v6-face v6-face-${f.side}`}
                 viewBox="-2 -2 104 104"
-                style={{ "--x": `${f.x}%`, "--y": `${f.y}%`, "--k": f.size, "--d": `${f.delay}s` } as React.CSSProperties}
+                style={{ "--x": `${f.x}%`, "--y": `${f.y}%`, "--k": f.size, "--d": `${f.delay}s`, "--depth": f.depth } as React.CSSProperties}
               >
                 <clipPath id={`v6-card-${f.id}`}>
                   <path d={SHAPES[f.shape]} transform={flip} />
@@ -176,6 +260,10 @@ const HeroV6 = () => {
           ))}
         </div>
       </main>
+      </div>
+
+      <Question />
+      <Cta />
     </div>
   );
 };

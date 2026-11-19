@@ -1,0 +1,182 @@
+/* The question mosaic. Uses the tokens set on .hero-v6.
+   Positions are the reference's, in its 1920 x 1080 stage (1 unit = --u).
+   Tailored to v6: Anton uppercase for every line, the v6 palette for the tiles
+   (soft blue, blue, lime, pale orange, ink, lavender), ink outlines.
+
+   Driven from scroll in JS (question.tsx):
+     --e    0 → 1  the white panel has shrunk into the centre tile and the mosaic has risen
+     --out  0 → 1  afterwards, rows drift at their own speeds
+     --t1   1 → 0  the lead-in line        --t2  0 → 1  the question
+     --bc   0 → 1  the centre tile's blue edge
+   The defaults below are the finished mosaic, so it is correct with no JS or reduced motion. */
+
+.qs { background: var(--paper); color: var(--ink); }
+.qs-wrap { height: 420vh; }
+.qs-wrap.is-static { height: auto; }
+
+.qs-view {
+  /* Fit the stage to the screen's width so no label is cropped at the sides; on screens taller
+     than 16:9 the top and bottom rows simply show more of themselves. */
+  --u: max(calc(100vw / 1920), calc(100vh / 1300));
+  --zoom: 2.2; /* how much larger the stage starts; question.tsx sets the exact value so the centre tile fills the screen */
+  --e: 1;
+  --out: 0;
+  --t1: 0;
+  --t2: 1;
+  --bc: 1;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: clip;
+}
+.qs-wrap.is-static .qs-view { position: relative; }
+
+.qs-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(1920 * var(--u));
+  height: calc(1080 * var(--u));
+  margin: calc(-540 * var(--u)) 0 0 calc(-960 * var(--u));
+  transform-origin: 50% 50%;
+  scale: calc(1 + (1 - var(--e)) * (var(--zoom) - 1));
+}
+
+/* ── the six tiles ───────────────────────────────────── */
+.qs-tile {
+  position: absolute;
+  border: max(1.5px, calc(1.5 * var(--u))) solid var(--ink);
+  border-radius: calc(61 * var(--u));
+  overflow: hidden;
+}
+.qs-tile p, .qs-tile img, .qs-tile svg { position: absolute; display: block; margin: 0; }
+.qs-tile p { font-family: var(--display); font-weight: 400; line-height: 1; letter-spacing: 0.005em; text-transform: uppercase; white-space: nowrap; }
+.qs-tile svg text { font-family: var(--ui); }
+
+/* each row rises from further below, then drifts at its own speed */
+.qs-row-top { translate: 0 calc((260 * (1 - var(--e)) - 60 * var(--out)) * var(--u)); }
+.qs-row-side { translate: 0 calc((420 * (1 - var(--e)) - 40 * var(--out)) * var(--u)); }
+.qs-row-bottom { translate: 0 calc(560 * (1 - var(--e)) * var(--u)); }
+
+.qs-a { left: calc(-53 * var(--u)); top: calc(-311 * var(--u)); width: calc(1001 * var(--u)); height: calc(552 * var(--u)); background: #d6e4fb; color: var(--blue); }
+.qs-b { left: calc(972 * var(--u)); top: calc(-311 * var(--u)); width: calc(1001 * var(--u)); height: calc(552 * var(--u)); background: var(--blue); color: #fff; }
+.qs-c { left: calc(-61 * var(--u)); top: calc(264 * var(--u)); width: calc(513 * var(--u)); height: calc(552 * var(--u)); background: var(--lime); }
+.qs-d { left: calc(1469 * var(--u)); top: calc(264 * var(--u)); width: calc(513 * var(--u)); height: calc(552 * var(--u)); background: #fbe0b8; }
+.qs-e { left: calc(-67 * var(--u)); top: calc(839 * var(--u)); width: calc(1001 * var(--u)); height: calc(552 * var(--u)); background: var(--ink); color: #dde7f9; }
+.qs-f { left: calc(958 * var(--u)); top: calc(839 * var(--u)); width: calc(1001 * var(--u)); height: calc(552 * var(--u)); background: #b9b3f0; }
+
+.qs-a p { left: calc(149 * var(--u)); top: calc(386 * var(--u)); font-size: calc(80 * var(--u)); }
+.qs-a img { left: calc(689 * var(--u)); top: calc(326 * var(--u)); width: calc(224 * var(--u)); height: calc(227 * var(--u)); }
+.qs-b p { left: calc(96 * var(--u)); top: calc(378 * var(--u)); font-size: calc(72 * var(--u)); line-height: 1.02; }
+.qs-b svg { left: calc(590 * var(--u)); top: calc(346 * var(--u)); width: calc(286 * var(--u)); height: calc(198 * var(--u)); }
+.qs-c p { left: calc(82 * var(--u)); top: calc(80 * var(--u)); font-size: calc(58 * var(--u)); }
+.qs-c img { left: calc(73 * var(--u)); top: calc(150 * var(--u)); width: calc(337 * var(--u)); height: calc(336 * var(--u)); }
+.qs-d p { left: 0; width: calc(458 * var(--u)); top: calc(40 * var(--u)); font-size: calc(62 * var(--u)); line-height: 1.02; text-align: center; }
+.qs-d img { left: calc(49 * var(--u)); top: calc(196 * var(--u)); width: calc(359 * var(--u)); height: calc(312 * var(--u)); }
+.qs-e p { left: calc(150 * var(--u)); top: calc(64 * var(--u)); font-size: calc(80 * var(--u)); }
+.qs-e svg { left: calc(640 * var(--u)); top: calc(22 * var(--u)); width: calc(176 * var(--u)); height: calc(206 * var(--u)); }
+.qs-f p { left: calc(424 * var(--u)); top: calc(70 * var(--u)); font-size: calc(96 * var(--u)); }
+.qs-f img { left: calc(163 * var(--u)); top: calc(11 * var(--u)); width: calc(239 * var(--u)); height: calc(211 * var(--u)); }
+
+/* ── the centre tile: the only thing the eye should be on ── */
+.qs-centre {
+  position: absolute;
+  z-index: 2;
+  left: calc(472 * var(--u));
+  top: calc(265 * var(--u));
+  width: calc(977 * var(--u));
+  height: calc(551 * var(--u));
+  border: calc(5 * var(--u)) solid color-mix(in srgb, var(--blue) calc(var(--bc) * 100%), #fff);
+  border-radius: calc(61 * var(--e) * var(--u));
+  background: #fff;
+  overflow: hidden;
+  translate: 0 calc(-20 * var(--out) * var(--u));
+}
+.qs-centre p, .qs-centre h2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.qs-lead {
+  top: calc(176 * var(--u));
+  color: color-mix(in srgb, var(--ink) 32%, #fff);
+  font-size: calc(56 * var(--u));
+  line-height: 1.06;
+  opacity: var(--t1);
+  filter: blur(calc((1 - var(--t1)) * 8px));
+}
+.qs-ask {
+  top: calc(150 * var(--u));
+  color: var(--ink);
+  font-size: calc(92 * var(--u));
+  line-height: 1;
+  opacity: var(--t2);
+  translate: 0 calc((1 - var(--t2)) * 18 * var(--u));
+  filter: blur(calc((1 - var(--t2)) * 8px));
+}
+/* Devy is in the panel from the first frame, standing under the line, and rides it down into the
+   mosaic: in the reference he never fades in or out (same box: 116 x 142 at 426, 304) */
+.qs-centre img {
+  position: absolute;
+  left: calc(426 * var(--u));
+  top: calc(304 * var(--u));
+  width: calc(116 * var(--u));
+  height: calc(142 * var(--u));
+  object-fit: contain;
+}
+
+/* ── phones and portrait tablets: a brick mosaic that fills the screen ──
+   Stage is 1080 x 2340, so the screen width sets the scale. Five bands, top to bottom:
+     one wide tile  ·  two half tiles  ·  THE QUESTION (dead centre)  ·  two half tiles  ·  one wide tile
+   The wide tiles bleed off the top and bottom edges like the desktop rows do, and each band
+   drifts at its own speed, so the question stays the still point in the middle. */
+@media (max-width: 1024px) and (orientation: portrait) {
+  .qs-view { --u: max(calc(100vw / 1080), calc(100vh / 2340)); --zoom: 4.7; }
+  .qs-stage { width: calc(1080 * var(--u)); height: calc(2340 * var(--u)); margin: calc(-1170 * var(--u)) 0 0 calc(-540 * var(--u)); transform-origin: 50% 50%; }
+
+  .qs-tile { border-radius: calc(48 * var(--u)); }
+  /* wide tiles: top and bottom bands */
+  .qs-a, .qs-f { left: calc(-30 * var(--u)); width: calc(1140 * var(--u)); height: calc(440 * var(--u)); }
+  .qs-a { top: calc(-20 * var(--u)); }
+  .qs-f { top: calc(1920 * var(--u)); }
+  /* half tiles: the bands either side of the question */
+  .qs-b, .qs-c, .qs-d, .qs-e { width: calc(545 * var(--u)); height: calc(400 * var(--u)); }
+  .qs-c, .qs-e { left: calc(-25 * var(--u)); }
+  .qs-b, .qs-d { left: calc(560 * var(--u)); }
+  .qs-b, .qs-c { top: calc(460 * var(--u)); }
+  .qs-d, .qs-e { top: calc(1480 * var(--u)); }
+
+  /* each band rises from further away the lower it sits, then keeps drifting */
+  .qs-a.qs-tile { translate: 0 calc((200 * (1 - var(--e)) - 70 * var(--out)) * var(--u)); }
+  .qs-b.qs-tile, .qs-c.qs-tile { translate: 0 calc((280 * (1 - var(--e)) - 36 * var(--out)) * var(--u)); }
+  .qs-d.qs-tile, .qs-e.qs-tile { translate: 0 calc((400 * (1 - var(--e)) + 36 * var(--out)) * var(--u)); }
+  .qs-f.qs-tile { translate: 0 calc((540 * (1 - var(--e)) + 70 * var(--out)) * var(--u)); }
+
+  /* half tiles: label on top, picture below it */
+  .qs-tile p { left: calc(70 * var(--u)); top: calc(40 * var(--u)); width: auto; font-size: calc(56 * var(--u)); line-height: 1.02; text-align: left; }
+  .qs-tile img, .qs-tile svg { left: auto; right: calc(64 * var(--u)); top: auto; bottom: calc(26 * var(--u)); width: auto; height: calc(205 * var(--u)); }
+  .qs-b p, .qs-d p { left: calc(40 * var(--u)); }
+  .qs-b svg, .qs-d img { right: calc(40 * var(--u)); }
+  .qs-b svg { height: calc(176 * var(--u)); }
+  .qs-c p { font-size: calc(52 * var(--u)); }
+
+  /* wide tiles: big label on the left, picture on the right; the top one sits clear of the nav */
+  .qs-a p, .qs-f p { left: calc(96 * var(--u)); font-size: calc(104 * var(--u)); }
+  .qs-a p { font-size: calc(88 * var(--u)); } /* the longer of the two: keep it clear of its picture */
+  .qs-a p { top: calc(250 * var(--u)); }
+  .qs-f p { top: calc(120 * var(--u)); }
+  .qs-a img, .qs-f img { right: calc(110 * var(--u)); height: calc(250 * var(--u)); }
+  .qs-a img { bottom: calc(22 * var(--u)); height: calc(212 * var(--u)); }
+  .qs-f img { bottom: auto; top: calc(60 * var(--u)); }
+
+  .qs-centre { left: calc(40 * var(--u)); top: calc(900 * var(--u)); width: calc(1000 * var(--u)); height: calc(540 * var(--u)); border-width: calc(7 * var(--u)); border-radius: calc(52 * var(--e) * var(--u)); }
+  .qs-lead { top: calc(222 * var(--u)); font-size: calc(22 * var(--u)); }
+  .qs-ask { top: calc(100 * var(--u)); font-size: calc(98 * var(--u)); }
+  .qs-centre img { left: 50%; translate: -50% 0; top: calc(244 * var(--u)); width: auto; height: calc(236 * var(--u)); }
+}

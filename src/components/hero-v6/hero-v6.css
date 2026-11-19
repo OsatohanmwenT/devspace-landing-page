@@ -29,38 +29,69 @@
   --d-lh: 1.02;
   --d-track: 0;
 
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100svh;
-  min-height: 600px;
+  --p: 0; /* scroll exit progress, written from JS */
+
+  position: relative;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--ui);
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
 }
+
+.v6-hero {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100svh;
+  min-height: 600px;
+  padding-top: var(--nav-h);
+}
 .hero-v6 * { font-family: inherit; box-sizing: border-box; }
 .hero-v6 a { color: inherit; text-decoration: none; }
 .hero-v6 :focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 999px; }
 .v6-nav :focus-visible { outline-color: var(--blue); }
 
-/* ── nav: quiet, on the paper, outside the stage ─────── */
+/* ── nav: stays put the whole way down. At the top it is bare type on the paper; once the
+   page moves, the two groups pick up their own backing so they stay readable over anything. ── */
 .v6-nav {
-  flex: none;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  position: fixed;
+  z-index: 50;
+  inset: 0 0 auto;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   height: var(--nav-h);
-  padding: 0 calc(var(--inset) + 16px);
+  padding: 0 calc(var(--inset) + 8px);
   font-size: 14px;
   font-weight: 500;
+  pointer-events: none; /* only the two groups take clicks */
 }
+.v6-nav-main, .v6-actions {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  height: 46px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, padding 0.4s var(--ease);
+}
+.v6-nav-main { gap: 36px; padding: 0 8px; }
+.v6-actions { gap: 20px; padding: 0; }
 .v6-brand img { display: block; }
-.v6-links { display: flex; gap: 32px; }
+.v6-links { display: flex; gap: 28px; }
 .v6-links a, .v6-login { opacity: 0.72; transition: opacity 0.15s ease; }
 .v6-links a:hover, .v6-login:hover { opacity: 1; }
-.v6-actions { display: flex; align-items: center; justify-content: flex-end; gap: 20px; }
+
+.v6-nav.is-scrolled .v6-nav-main,
+.v6-nav.is-scrolled .v6-actions {
+  border-color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.v6-nav.is-scrolled .v6-nav-main { padding: 0 22px 0 18px; }
+.v6-nav.is-scrolled .v6-actions { padding: 0 4px 0 18px; }
 
 /* ── buttons: small pills, so the headline stays the loudest thing ── */
 .v6-btn {
@@ -214,6 +245,8 @@
   overflow: visible;
   /* the same hard lip as the button and the headline chip */
   filter: drop-shadow(0 4px 0 var(--ink));
+  /* cursor depth: --mx / --my run -1 to 1 across the hero; --depth is how far this card travels, in px */
+  transform: translate3d(calc(var(--mx, 0) * var(--depth, 0) * -1px), calc(var(--my, 0) * var(--depth, 0) * -1px), 0);
   animation: v6-pop 0.6s var(--ease) calc(0.7s + var(--d) * -0.05) both, v6-float 7s ease-in-out var(--d) infinite alternate;
 }
 .v6-face-l { left: var(--x); }
@@ -222,6 +255,10 @@
 @keyframes v6-pop { from { opacity: 0; scale: 0.6; } }
 @keyframes v6-float { from { translate: 0 -5px; } to { translate: 0 5px; } }
 @media (max-width: 960px) { .v6-faces { display: none; } }
+
+/* ── scroll: the hero simply leaves with the page. The only extra is depth: the face cards
+   sit "closer", so they rise a little faster than the stage they float on. ── */
+.v6-faces { translate: 0 calc(var(--p) * -9vh); }
 
 /* ── entrance: top to bottom, ending on Devy ─────────── */
 @keyframes v6-rise { from { opacity: 0; transform: translateY(0.35em); } }
@@ -241,7 +278,9 @@
 /* ── phone: same column, the headline wraps on its own ── */
 @media (max-width: 720px) {
   .hero-v6 { --d-size: clamp(40px, 13.4vw, 96px); --nav-h: 56px; }
-  .v6-nav { grid-template-columns: 1fr auto; padding: 0 16px; }
+  .v6-nav { padding: 0 12px; }
+  .v6-nav.is-scrolled .v6-actions { padding: 0 3px; }
+  .v6-nav.is-scrolled .v6-nav-main { padding: 0 16px; }
   .v6-links, .v6-login { display: none; }
   .v6-line { white-space: normal; text-wrap: balance; }
   .v6-sub { max-width: 22em; }
