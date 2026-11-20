@@ -59,13 +59,15 @@
 }
 /* draggable: the transform carries the drag offset; the float animation keeps translate to itself */
 .v6-px {
-  transform: translate(var(--dx, 0px), var(--dy, 0px));
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--lean, 0deg));
+  transition: scale 0.3s var(--ease), filter 0.25s ease;
+  will-change: transform;
   cursor: grab;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
-.v6-px.is-dragging { cursor: grabbing; animation-play-state: paused; filter: drop-shadow(0 6px 0 rgb(16 0 74 / 0.45)); scale: 1.12 !important; }
+.v6-px.is-dragging { cursor: grabbing; animation-play-state: paused; filter: drop-shadow(0 8px 0 rgb(16 0 74 / 0.4)); scale: 1.14 !important; }
 .v6-px-l { left: var(--x); }
 .v6-px-r { right: var(--x); }
 

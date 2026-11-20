@@ -36,12 +36,12 @@ const SHAPES = {
 } as const;
 
 const FACES = [
-  { id: "frontend", shape: "tab", tone: "#e3dcfa", side: "l", x: 5, y: 11, size: 1, delay: 0, depth: 22 },
-  { id: "data", shape: "notch", tone: "#fbe0b8", side: "l", x: 13, y: 43, size: 0.86, delay: -2.4, depth: 12 },
-  { id: "security", shape: "step", tone: "#d6e4fb", side: "l", x: 4, y: 70, size: 0.94, delay: -4.1, depth: 17 },
-  { id: "backend", shape: "step", tone: "#d8f1fa", side: "r", x: 5, y: 10, size: 0.96, delay: -1.2, depth: 18 },
-  { id: "ai", shape: "tab", tone: "#f6ecdf", side: "r", x: 13, y: 42, size: 0.86, delay: -3.3, depth: 11 },
-  { id: "devops", shape: "notch", tone: "#dcebd3", side: "r", x: 4, y: 69, size: 1, delay: -5, depth: 24 },
+  { id: "frontend", shape: "tab", tone: "#e3dcfa", side: "l", x: 5, y: 11, size: 1, delay: 0, depth: 22, role: "Frontend", tagRot: -4 },
+  { id: "data", shape: "notch", tone: "#fbe0b8", side: "l", x: 13, y: 43, size: 0.86, delay: -2.4, depth: 12, role: "Data", tagRot: 3 },
+  { id: "security", shape: "step", tone: "#d6e4fb", side: "l", x: 4, y: 70, size: 0.94, delay: -4.1, depth: 17, role: "Security", tagRot: -3 },
+  { id: "backend", shape: "step", tone: "#d8f1fa", side: "r", x: 5, y: 10, size: 0.96, delay: -1.2, depth: 18, role: "Backend", tagRot: 4 },
+  { id: "ai", shape: "tab", tone: "#f6ecdf", side: "r", x: 13, y: 42, size: 0.86, delay: -3.3, depth: 11, role: "AI / ML", tagRot: -3 },
+  { id: "devops", shape: "notch", tone: "#dcebd3", side: "r", x: 4, y: 69, size: 1, delay: -5, depth: 24, role: "DevOps", tagRot: 3 },
 ] as const;
 
 const params = () => new URLSearchParams(window.location.search);
@@ -237,19 +237,21 @@ const HeroV6 = () => {
             // cards on the right are mirrored so their notches and tabs face the centre column
             const flip = f.side === "r" ? "translate(100 0) scale(-1 1)" : undefined;
             return (
-              <svg
+              <div
                 key={f.id}
                 className={`v6-face v6-face-${f.side}`}
-                viewBox="-2 -2 104 104"
-                style={{ "--x": `${f.x}%`, "--y": `${f.y}%`, "--k": f.size, "--d": `${f.delay}s`, "--depth": f.depth } as React.CSSProperties}
+                style={{ "--x": `${f.x}%`, "--y": `${f.y}%`, "--k": f.size, "--d": `${f.delay}s`, "--depth": f.depth, "--tag-r": `${f.tagRot}deg` } as React.CSSProperties}
               >
-                <clipPath id={`v6-card-${f.id}`}>
-                  <path d={SHAPES[f.shape]} transform={flip} />
-                </clipPath>
-                <path d={SHAPES[f.shape]} transform={flip} fill={f.tone} />
-                <image href={`/hero-v6/face-${f.id}.png`} x="-9" y="-2" width="118" height="118" clipPath={`url(#v6-card-${f.id})`} />
-                <path className="v6-card-edge" d={SHAPES[f.shape]} transform={flip} />
-              </svg>
+                <svg viewBox="-2 -2 104 104">
+                  <clipPath id={`v6-card-${f.id}`}>
+                    <path d={SHAPES[f.shape]} transform={flip} />
+                  </clipPath>
+                  <path d={SHAPES[f.shape]} transform={flip} fill={f.tone} />
+                  <image href={`/hero-v6/face-${f.id}.png`} x="-9" y="-2" width="118" height="118" clipPath={`url(#v6-card-${f.id})`} />
+                  <path className="v6-card-edge" d={SHAPES[f.shape]} transform={flip} />
+                </svg>
+                <span className="v6-role">{f.role}</span>
+              </div>
             );
           })}
         </div>

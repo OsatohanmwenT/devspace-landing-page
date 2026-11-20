@@ -87,7 +87,7 @@
 .v6-nav.is-scrolled .v6-nav-main,
 .v6-nav.is-scrolled .v6-actions {
   border-color: var(--ink);
-  background: var(--paper);
+  background: #fff;
   box-shadow: 0 3px 0 var(--ink);
 }
 .v6-nav.is-scrolled .v6-nav-main { padding: 0 22px 0 18px; }
@@ -242,12 +242,30 @@
   top: var(--y);
   width: var(--s);
   height: var(--s);
-  overflow: visible;
-  /* the same hard lip as the button and the headline chip */
-  filter: drop-shadow(0 4px 0 var(--ink));
   /* cursor depth: --mx / --my run -1 to 1 across the hero; --depth is how far this card travels, in px */
   transform: translate3d(calc(var(--mx, 0) * var(--depth, 0) * -1px), calc(var(--my, 0) * var(--depth, 0) * -1px), 0);
   animation: v6-pop 0.6s var(--ease) calc(0.7s + var(--d) * -0.05) both, v6-float 7s ease-in-out var(--d) infinite alternate;
+}
+/* the card itself: the same hard lip as the button and the headline chip */
+.v6-face > svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 0 var(--ink)); }
+/* the role tag, as on the reference: a little label stuck across the bottom edge of the card */
+.v6-role {
+  position: absolute;
+  left: 50%;
+  bottom: -13px;
+  translate: -50% 0;
+  rotate: var(--tag-r, -3deg);
+  padding: 5px 10px 4px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--ink);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
 }
 .v6-face-l { left: var(--x); }
 .v6-face-r { right: var(--x); }

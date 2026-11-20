@@ -39,24 +39,89 @@ const Cta = () => {
     return () => io.disconnect();
   }, []);
 
-  /* Drag any sticker anywhere inside the block. Pointer events cover mouse, touch and pen;
-     the sticker is moved with a CSS transform (the float animation owns translate), clamped so
-     it can never leave the block, and it stays where it is dropped. */
+  /* Drag any sticker anywhere inside the block. Pointer events cover mouse, touch and pen.
+     It is smoothed three ways so it feels held, not glued: the sticker eases toward the pointer
+     instead of snapping to it, leans into the direction it is moving, and keeps gliding with
+     the throw when let go (friction, and a soft bounce off the block's edges).
+     Moved with a CSS transform (the float animation owns translate); clamped inside the block. */
   useEffect(() => {
     const block = ref.current;
     if (!block) return;
-    let active: { el: SVGElement; id: number; sx: number; sy: number; bx: number; by: number; minX: number; maxX: number; minY: number; maxY: number } | null = null;
+    type Drag = {
+      el: SVGElement; id: number; down: boolean;
+      sx: number; sy: number; bx: number; by: number;
+      x: number; y: number; tx: number; ty: number; vx: number; vy: number; lean: number;
+      minX: number; maxX: number; minY: number; maxY: number;
+    };
+    let drag: Drag | null = null;
+    let raf = 0;
+    let last = 0;
     let top = 3;
+    const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+
+    const paint = (d: Drag) => {
+      d.el.style.setProperty("--dx", d.x.toFixed(2) + "px");
+      d.el.style.setProperty("--dy", d.y.toFixed(2) + "px");
+      d.el.style.setProperty("--lean", d.lean.toFixed(2) + "deg");
+    };
+    const finish = () => {
+      if (!drag) return;
+      drag.el.classList.remove("is-dragging");
+      drag.lean = 0;
+      paint(drag);
+      drag = null;
+    };
+
+    const step = (now: number) => {
+      raf = 0;
+      const d = drag;
+      if (!d) return;
+      const f = Math.min(2.5, (now - last) / 16.67); // frames elapsed, so it feels the same at any refresh rate
+      last = now;
+      const px = d.x;
+      const py = d.y;
+      if (d.down) {
+        const k = 1 - Math.pow(0.7, f); // ease toward the pointer
+        d.x += (d.tx - d.x) * k;
+        d.y += (d.ty - d.y) * k;
+        d.vx += ((d.x - px) / f - d.vx) * 0.35; // smoothed velocity, kept for the throw
+        d.vy += ((d.y - py) / f - d.vy) * 0.35;
+      } else {
+        d.vx = clamp(d.vx, -34, 34); // a flick glides, it does not teleport
+        d.vy = clamp(d.vy, -34, 34);
+        d.x += d.vx * f;
+        d.y += d.vy * f;
+        const fr = Math.pow(0.91, f);
+        d.vx *= fr;
+        d.vy *= fr;
+        if (d.x < d.minX || d.x > d.maxX) { d.x = clamp(d.x, d.minX, d.maxX); d.vx *= -0.45; }
+        if (d.y < d.minY || d.y > d.maxY) { d.y = clamp(d.y, d.minY, d.maxY); d.vy *= -0.45; }
+      }
+      d.lean += (clamp(d.vx * 1.1, -14, 14) - d.lean) * 0.18;
+      paint(d);
+      const moving = Math.abs(d.vx) > 0.04 || Math.abs(d.vy) > 0.04 || Math.abs(d.lean) > 0.15;
+      if (d.down || moving) raf = requestAnimationFrame(step);
+      else finish();
+    };
+    const kick = () => {
+      if (raf) return;
+      last = performance.now();
+      raf = requestAnimationFrame(step);
+    };
 
     const down = (e: PointerEvent) => {
       const el = (e.target as Element).closest<SVGElement>(".v6-px");
       if (!el || !block.contains(el) || (e.pointerType === "mouse" && e.button !== 0)) return;
+      cancelAnimationFrame(raf);
+      raf = 0;
+      finish();
       const r = el.getBoundingClientRect();
       const b = block.getBoundingClientRect();
       const bx = parseFloat(el.style.getPropertyValue("--dx")) || 0;
       const by = parseFloat(el.style.getPropertyValue("--dy")) || 0;
-      active = {
-        el, id: e.pointerId, sx: e.clientX, sy: e.clientY, bx, by,
+      drag = {
+        el, id: e.pointerId, down: true, sx: e.clientX, sy: e.clientY, bx, by,
+        x: bx, y: by, tx: bx, ty: by, vx: 0, vy: 0, lean: 0,
         minX: bx + (b.left - r.left), maxX: bx + (b.right - r.right),
         minY: by + (b.top - r.top), maxY: by + (b.bottom - r.bottom),
       };
@@ -64,24 +129,26 @@ const Cta = () => {
       el.classList.add("is-dragging");
       el.style.zIndex = String(++top);
       e.preventDefault();
+      kick();
     };
     const move = (e: PointerEvent) => {
-      if (!active || e.pointerId !== active.id) return;
-      const dx = Math.min(active.maxX, Math.max(active.minX, active.bx + e.clientX - active.sx));
-      const dy = Math.min(active.maxY, Math.max(active.minY, active.by + e.clientY - active.sy));
-      active.el.style.setProperty("--dx", dx.toFixed(1) + "px");
-      active.el.style.setProperty("--dy", dy.toFixed(1) + "px");
+      if (!drag || !drag.down || e.pointerId !== drag.id) return;
+      drag.tx = clamp(drag.bx + e.clientX - drag.sx, drag.minX, drag.maxX);
+      drag.ty = clamp(drag.by + e.clientY - drag.sy, drag.minY, drag.maxY);
+      kick();
     };
     const up = (e: PointerEvent) => {
-      if (!active || e.pointerId !== active.id) return;
-      active.el.classList.remove("is-dragging");
-      active = null;
+      if (!drag || !drag.down || e.pointerId !== drag.id) return;
+      drag.down = false;
+      drag.el.classList.remove("is-dragging"); // drops back to its resting look while it glides
+      kick();
     };
     block.addEventListener("pointerdown", down);
     block.addEventListener("pointermove", move);
     block.addEventListener("pointerup", up);
     block.addEventListener("pointercancel", up);
     return () => {
+      cancelAnimationFrame(raf);
       block.removeEventListener("pointerdown", down);
       block.removeEventListener("pointermove", move);
       block.removeEventListener("pointerup", up);
