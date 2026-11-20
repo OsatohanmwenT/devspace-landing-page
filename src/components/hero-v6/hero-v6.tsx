@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type React from "react";
 import { smoothFollow } from "../../lib/smooth-scroll";
 import Cta from "./cta";
+import { PixelSticker } from "./pixel-stickers";
 import Question from "./question";
 import "./hero-v6.css";
 
@@ -23,25 +24,17 @@ const POSES = [
   { id: "scientist", src: "/hero-v6/devy-scientist.webp" },
 ] as const;
 
-/* Six learners in the side gutters, three a side. Each sits in a rounded card with one
-   deliberate irregularity, taken from the Devspace avatar board: a stepped-off corner,
-   a diagonal notch, or folder-style tabs. Paths are drawn in a 100 x 100 box. */
-const SHAPES = {
-  // top-right corner stepped down, like a file card
-  step: "M8 0H76Q83 0 83 7V9Q83 16 90 16H92Q100 16 100 24V92Q100 100 92 100H8Q0 100 0 92V8Q0 0 8 0Z",
-  // bottom-right corner cut back on a diagonal
-  notch: "M8 0H92Q100 0 100 8V79Q100 83 97 86L92 91Q89 94 89 97Q89 100 84 100H8Q0 100 0 92V8Q0 0 8 0Z",
-  // a raised tab along the top and a small tab on the side
-  tab: "M8 9H52Q57 9 57 4.5Q57 0 62 0H85Q93 0 93 8V41Q93 45 96.5 45Q100 45 100 49V63Q100 67 96.5 67Q93 67 93 71V92Q93 100 85 100H8Q0 100 0 92V17Q0 9 8 9Z",
-} as const;
-
+/* Eight paths in the side gutters, four a side: one pixel-art object per role, with its
+   role tag stuck underneath. Hover one and it comes forward; the others step back. */
 const FACES = [
-  { id: "frontend", shape: "tab", tone: "#e3dcfa", side: "l", x: 5, y: 11, size: 1, delay: 0, depth: 22, role: "Frontend", tagRot: -4 },
-  { id: "data", shape: "notch", tone: "#fbe0b8", side: "l", x: 13, y: 43, size: 0.86, delay: -2.4, depth: 12, role: "Data", tagRot: 3 },
-  { id: "security", shape: "step", tone: "#d6e4fb", side: "l", x: 4, y: 70, size: 0.94, delay: -4.1, depth: 17, role: "Security", tagRot: -3 },
-  { id: "backend", shape: "step", tone: "#d8f1fa", side: "r", x: 5, y: 10, size: 0.96, delay: -1.2, depth: 18, role: "Backend", tagRot: 4 },
-  { id: "ai", shape: "tab", tone: "#f6ecdf", side: "r", x: 13, y: 42, size: 0.86, delay: -3.3, depth: 11, role: "AI / ML", tagRot: -3 },
-  { id: "devops", shape: "notch", tone: "#dcebd3", side: "r", x: 4, y: 69, size: 1, delay: -5, depth: 24, role: "DevOps", tagRot: 3 },
+  { id: "frontend", side: "l", x: 5, y: 6, size: 0.95, delay: 0, depth: 22, role: "Frontend", tagRot: -4 },
+  { id: "data", side: "l", x: 15, y: 29, size: 0.82, delay: -2.4, depth: 12, role: "Data", tagRot: 3 },
+  { id: "pm", side: "l", x: 4, y: 51, size: 0.9, delay: -4.1, depth: 17, role: "PM", tagRot: -3 },
+  { id: "security", side: "l", x: 14, y: 74, size: 0.82, delay: -5.6, depth: 14, role: "Security", tagRot: 4 },
+  { id: "backend", side: "r", x: 5, y: 5, size: 0.92, delay: -1.2, depth: 18, role: "Backend", tagRot: 4 },
+  { id: "ai", side: "r", x: 15, y: 28, size: 0.82, delay: -3.3, depth: 11, role: "AI / ML", tagRot: -3 },
+  { id: "video", side: "r", x: 4, y: 50, size: 0.9, delay: -5, depth: 24, role: "Video editing", tagRot: 3 },
+  { id: "devops", side: "r", x: 14, y: 73, size: 0.85, delay: -0.6, depth: 16, role: "DevOps", tagRot: -4 },
 ] as const;
 
 const params = () => new URLSearchParams(window.location.search);
@@ -133,7 +126,7 @@ const HeroV6 = () => {
     };
   }, []);
 
-  /* Cursor depth. Moving the pointer over the hero nudges the face cards a few pixels the
+  /* Cursor depth. Moving the pointer over the hero nudges the pixel art a few pixels the
      opposite way, each by its own amount, so they read as floating at different distances.
      Eased toward the pointer and asleep when settled; off for touch and reduced motion. */
   useEffect(() => {
@@ -234,22 +227,13 @@ const HeroV6 = () => {
 
         <div className="v6-faces" aria-hidden="true">
           {FACES.map((f) => {
-            // cards on the right are mirrored so their notches and tabs face the centre column
-            const flip = f.side === "r" ? "translate(100 0) scale(-1 1)" : undefined;
             return (
               <div
                 key={f.id}
                 className={`v6-face v6-face-${f.side}`}
                 style={{ "--x": `${f.x}%`, "--y": `${f.y}%`, "--k": f.size, "--d": `${f.delay}s`, "--depth": f.depth, "--tag-r": `${f.tagRot}deg` } as React.CSSProperties}
               >
-                <svg viewBox="-2 -2 104 104">
-                  <clipPath id={`v6-card-${f.id}`}>
-                    <path d={SHAPES[f.shape]} transform={flip} />
-                  </clipPath>
-                  <path d={SHAPES[f.shape]} transform={flip} fill={f.tone} />
-                  <image href={`/hero-v6/face-${f.id}.png`} x="-9" y="-2" width="118" height="118" clipPath={`url(#v6-card-${f.id})`} />
-                  <path className="v6-card-edge" d={SHAPES[f.shape]} transform={flip} />
-                </svg>
+                <PixelSticker name={f.id} className="v6-face-art" />
                 <span className="v6-role">{f.role}</span>
               </div>
             );

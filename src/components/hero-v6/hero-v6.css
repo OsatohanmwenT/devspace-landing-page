@@ -234,8 +234,8 @@
 }
 .v6-pose.is-in { opacity: 1; transform: none; transition: opacity 0.25s ease-out 0.22s, transform 0.6s var(--ease) 0.22s; }
 
-/* ── learners in the side gutters: upright cards, never over the centre column ── */
-.v6-faces { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+/* ── the six paths in the side gutters: pixel art, never over the centre column ── */
+.v6-faces { position: absolute; inset: 0; z-index: 3; pointer-events: none; } /* above the copy layer (which spans the full width) so the art can be hovered; it never overlaps the text */
 .v6-face {
   --s: calc(clamp(88px, 9vw, 146px) * var(--k));
   position: absolute;
@@ -246,8 +246,15 @@
   transform: translate3d(calc(var(--mx, 0) * var(--depth, 0) * -1px), calc(var(--my, 0) * var(--depth, 0) * -1px), 0);
   animation: v6-pop 0.6s var(--ease) calc(0.7s + var(--d) * -0.05) both, v6-float 7s ease-in-out var(--d) infinite alternate;
 }
-/* the card itself: the same hard lip as the button and the headline chip */
-.v6-face > svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 0 var(--ink)); }
+/* the pixel art: crisp at any size, with its own paper edge (drawn in pixel-stickers.tsx) */
+.v6-face-art { display: block; width: 100%; height: 100%; overflow: visible; image-rendering: pixelated; }
+/* hover: this one comes forward, the rest step back */
+.v6-face { pointer-events: auto; }
+.v6-face-art, .v6-role { transition: scale 0.5s var(--ease), opacity 0.3s ease, filter 0.3s ease; }
+.v6-face:hover { z-index: 2; }
+.v6-face:hover .v6-face-art { scale: 1.3; }
+.v6-face:hover .v6-role { scale: 1.12; }
+.v6-faces:has(.v6-face:hover) .v6-face:not(:hover) > * { opacity: 0.3; filter: blur(1px); }
 /* the role tag, as on the reference: a little label stuck across the bottom edge of the card */
 .v6-role {
   position: absolute;
@@ -269,14 +276,15 @@
 }
 .v6-face-l { left: var(--x); }
 .v6-face-r { right: var(--x); }
-.v6-card-edge { fill: none; stroke: var(--ink); stroke-width: 2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-@keyframes v6-pop { from { opacity: 0; scale: 0.6; } }
-@keyframes v6-float { from { translate: 0 -5px; } to { translate: 0 5px; } }
 @media (max-width: 960px) { .v6-faces { display: none; } }
 
 /* ── scroll: the hero simply leaves with the page. The only extra is depth: the face cards
    sit "closer", so they rise a little faster than the stage they float on. ── */
 .v6-faces { translate: 0 calc(var(--p) * -9vh); }
+
+/* shared by the face cards and the CTA stickers (cta.css) */
+@keyframes v6-pop { from { opacity: 0; scale: 0.6; } }
+@keyframes v6-float { from { translate: 0 -5px; } to { translate: 0 5px; } }
 
 /* ── entrance: top to bottom, ending on Devy ─────────── */
 @keyframes v6-rise { from { opacity: 0; transform: translateY(0.35em); } }
